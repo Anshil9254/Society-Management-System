@@ -30,6 +30,7 @@ app.use(`${API.PREFIX}/complaints`, require('./modules/complaints/complaints.rou
 app.use(`${API.PREFIX}/billing`, require('./modules/billing/billing.routes'));
 app.use(`${API.PREFIX}/payments`, require('./modules/payments/payments.routes'));
 app.use(`${API.PREFIX}/announcements`, require('./modules/announcements/announcements.routes'));
+app.use(`${API.PREFIX}/service-requests`, require('./modules/serviceRequests/serviceRequests.routes'));
 // etc.
 
 // ─── Health Check ──────────────────────────────────────────

@@ -26,6 +26,10 @@ const AnnouncementsRepository = require('./modules/announcements/announcements.r
 const AnnouncementsService = require('./modules/announcements/announcements.service');
 const AnnouncementsController = require('./modules/announcements/announcements.controller');
 
+const ServiceRequestsRepository = require('./modules/serviceRequests/serviceRequests.repository');
+const ServiceRequestsService = require('./modules/serviceRequests/serviceRequests.service');
+const ServiceRequestsController = require('./modules/serviceRequests/serviceRequests.controller');
+
 const CacheService = require('./shared/services/cache.service');
 
 class Container {
@@ -105,6 +109,19 @@ class Container {
 
     const announcementsController = new AnnouncementsController(this.get('announcementsService'));
     this.services.set('announcementsController', announcementsController);
+
+    // Service Requests Module
+    const serviceRequestsRepository = new ServiceRequestsRepository(this.get('prisma'));
+    this.services.set('serviceRequestsRepository', serviceRequestsRepository);
+
+    const serviceRequestsService = new ServiceRequestsService(
+      this.get('serviceRequestsRepository'),
+      this.get('eventBus')
+    );
+    this.services.set('serviceRequestsService', serviceRequestsService);
+
+    const serviceRequestsController = new ServiceRequestsController(this.get('serviceRequestsService'));
+    this.services.set('serviceRequestsController', serviceRequestsController);
 
     // Other modules will be added here
   }
