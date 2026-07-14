@@ -1,17 +1,22 @@
 import axios from 'axios';
+import { getAccessToken, clearAccessToken } from '../contexts/AuthContext';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api/v1',
-  withCredentials: true,
+  withCredentials: true, // Sends httpOnly refresh token cookie automatically
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Add a request interceptor to attach JWT token
+/**
+ * Request interceptor: attach in-memory access token.
+ * The token lives in JS memory only — NOT in localStorage or sessionStorage.
+ * This prevents XSS attacks from reading the token via document.cookie or localStorage.
+ */
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getAccessToken(); // Read from in-memory store
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -20,21 +25,22 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add a response interceptor for unified error handling
+/**
+ * Response interceptor: handle 401 globally.
+ * When the server rejects a request as unauthorized, clear the in-memory token
+ * and dispatch an event so AuthContext can update UI state.
+ */
 api.interceptors.response.use(
-  (response) => response.data, // Return just the data object for cleaner usage
+  (response) => response.data, // Return just the data for cleaner usage
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Clear token and redirect to login if unauthorized (could trigger a global event)
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+    if (error.response?.status === 401) {
+      clearAccessToken();
       window.dispatchEvent(new Event('unauthorized'));
     }
-    
-    // Format error message from backend
     const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred';
     return Promise.reject(new Error(errorMessage));
   }
 );
 
 export default api;
+

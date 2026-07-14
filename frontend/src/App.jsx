@@ -34,16 +34,19 @@ function App() {
             {/* Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/:tab" element={<AdminDashboard />} />
             </Route>
             
             {/* Committee Routes */}
             <Route element={<ProtectedRoute allowedRoles={['committee_member']} />}>
-              <Route path="/committee" element={<div className="p-8"><CommitteeDashboard /></div>} />
+              <Route path="/committee" element={<CommitteeDashboard />} />
+              <Route path="/committee/:tab" element={<CommitteeDashboard />} />
             </Route>
             
             {/* Resident Routes */}
             <Route element={<ProtectedRoute allowedRoles={['resident']} />}>
               <Route path="/resident" element={<ResidentDashboard />} />
+              <Route path="/resident/:tab" element={<ResidentDashboard />} />
             </Route>
             
             <Route path="/" element={<RootRedirect />} />
