@@ -1,7 +1,7 @@
 const { NotFoundError } = require('../../shared/errors');
 const { ServiceRequestResponseDTO } = require('./serviceRequests.dto');
 const paginate = require('../../shared/utils/paginate');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 class ServiceRequestsService {
   constructor(serviceRequestsRepository, eventBus) {
@@ -23,7 +23,7 @@ class ServiceRequestsService {
     const filters = {};
 
     // Residents only see their own requests
-    if (user.role === Roles.RESIDENT) {
+    if (user.role === ROLES.RESIDENT) {
       filters.userId = user.id;
     } else if (queryParams.userId) {
       filters.userId = queryParams.userId;
@@ -44,7 +44,7 @@ class ServiceRequestsService {
     }
 
     // Authorization
-    if (user.role === Roles.RESIDENT && sr.userId !== user.id) {
+    if (user.role === ROLES.RESIDENT && sr.userId !== user.id) {
       throw new NotFoundError('Service request not found'); // Mask existence for security
     }
 

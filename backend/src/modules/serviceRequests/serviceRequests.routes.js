@@ -2,7 +2,7 @@ const express = require('express');
 const { createServiceRequestSchema, updateServiceRequestStatusSchema } = require('./serviceRequests.validator');
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const container = require('../../container');
 const serviceRequestsController = container.get('serviceRequestsController');
@@ -45,7 +45,7 @@ router.get(
  */
 router.patch(
   '/:id/status',
-  requireRole(Roles.ADMIN, Roles.COMMITTEE),
+  requireRole(ROLES.ADMIN, ROLES.COMMITTEE),
   validate(updateServiceRequestStatusSchema),
   auditLog('UPDATE_SERVICE_REQUEST', 'ServiceRequest', (req) => req.params.id),
   asyncHandler(serviceRequestsController.updateServiceRequestStatus)
