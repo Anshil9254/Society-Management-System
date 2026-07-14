@@ -10,6 +10,10 @@ const UsersRepository = require('./modules/users/users.repository');
 const UsersService = require('./modules/users/users.service');
 const UsersController = require('./modules/users/users.controller');
 
+const ComplaintsRepository = require('./modules/complaints/complaints.repository');
+const ComplaintsService = require('./modules/complaints/complaints.service');
+const ComplaintsController = require('./modules/complaints/complaints.controller');
+
 const CacheService = require('./shared/services/cache.service');
 
 class Container {
@@ -41,6 +45,20 @@ class Container {
 
     const usersController = new UsersController(this.get('usersService'));
     this.services.set('usersController', usersController);
+
+    // Complaints Module
+    const complaintsRepository = new ComplaintsRepository(this.get('prisma'));
+    this.services.set('complaintsRepository', complaintsRepository);
+
+    const complaintsService = new ComplaintsService(
+      this.get('complaintsRepository'),
+      this.get('eventBus'),
+      this.get('cacheService')
+    );
+    this.services.set('complaintsService', complaintsService);
+
+    const complaintsController = new ComplaintsController(this.get('complaintsService'));
+    this.services.set('complaintsController', complaintsController);
 
     // Other modules will be added here
   }
