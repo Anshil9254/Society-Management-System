@@ -42,6 +42,8 @@ const AuditLogsService = require('./modules/auditLogs/auditLogs.service');
 const AuditLogsController = require('./modules/auditLogs/auditLogs.controller');
 
 const CacheService = require('./shared/services/cache.service');
+const QueueService = require('./shared/services/queue.service');
+const env = require('./shared/config/env');
 
 class Container {
   constructor() {
@@ -52,6 +54,7 @@ class Container {
     this.services.set('redisClient', redisClient);
     this.services.set('eventBus', EventBus.getInstance());
     this.services.set('cacheService', new CacheService(this.get('redisClient')));
+    this.services.set('queueService', new QueueService(this.get('redisClient')));
 
     // Auth Module
     const authRepository = new AuthRepository(this.get('prisma'));

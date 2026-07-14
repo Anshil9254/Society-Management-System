@@ -47,7 +47,14 @@ app.use((req, res, next) => {
   next(new NotFoundError(`Route ${req.originalUrl}`));
 });
 
-// ─── Global Error Handler ──────────────────────────────────
-app.use(errorHandler);
+// ─── Setup Background Jobs & Subscribers ────────────────────
+const setupEventSubscribers = require('./subscribers');
+const setupNotificationWorker = require('./workers/notification.worker');
+
+setupEventSubscribers(container);
+setupNotificationWorker(container);
+
+// ─── Global Error Handler ───────────────────────────────────
+app.use(require('./shared/middleware').errorHandler);
 
 module.exports = app;
