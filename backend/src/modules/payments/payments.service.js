@@ -1,7 +1,7 @@
 const { NotFoundError, ConflictError, BadRequestError } = require('../../shared/errors');
 const { PaymentResponseDTO } = require('./payments.dto');
 const paginate = require('../../shared/utils/paginate');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 class PaymentsService {
   constructor(paymentsRepository, eventBus) {
@@ -63,7 +63,7 @@ class PaymentsService {
     const filters = {};
 
     // Residents only see their own payments
-    if (user.role === Roles.RESIDENT) {
+    if (user.role === ROLES.RESIDENT) {
       filters.userId = user.id;
     } else if (queryParams.userId) {
       filters.userId = queryParams.userId;
