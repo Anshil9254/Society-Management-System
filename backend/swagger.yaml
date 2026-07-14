@@ -1,25 +1,450 @@
 openapi: 3.0.0
 info:
   title: Society Management System API
-  description: API documentation for the Society Management System backend.
+  description: |
+    Complete REST API for the Society Management System.
+    
+    **Authentication**: Use the `/auth/login` endpoint to get an `accessToken`, then click
+    "Authorize" (top right) and enter: `Bearer <your_token>`.
+    
+    **Roles**: `admin` | `committee_member` | `resident`
   version: 1.0.0
+  contact:
+    name: Society Management System
+
 servers:
   - url: http://localhost:5000/api/v1
     description: Local development server
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+
+    PaginationMeta:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+        currentPage:
+          type: integer
+        limit:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, committee_member, resident]
+        fullName:
+          type: string
+        flatId:
+          type: string
+          format: uuid
+          nullable: true
+
+    Complaint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        imageUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    MaintenanceBill:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        flatId:
+          type: string
+        billingMonth:
+          type: integer
+        billingYear:
+          type: integer
+        amount:
+          type: number
+        dueDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, paid, partially_paid, overdue]
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        billId:
+          type: string
+        amount:
+          type: number
+        paymentMode:
+          type: string
+          enum: [upi, card, netbanking, cash]
+        transactionId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, success, failed]
+        paidAt:
+          type: string
+          format: date-time
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        targetAudience:
+          type: string
+          enum: [all, residents, committee]
+        isPinned:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serviceType:
+          type: string
+        preferredDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, approved, rejected, completed]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        details:
+          type: object
+        ipAddress:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Block:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        floorCount:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errorCode:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              message:
+                type: string
+
 security:
   - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Authentication & token management
+  - name: Users
+    description: User and resident management
+  - name: Complaints
+    description: Complaint management with image upload
+  - name: Billing
+    description: Maintenance bill generation and management
+  - name: Payments
+    description: Payment processing and records
+  - name: Announcements
+    description: Society announcements and notices
+  - name: Service Requests
+    description: Service request management
+  - name: Dashboard
+    description: Dashboard statistics and reports
+  - name: Notifications
+    description: In-app notification management
+  - name: Audit Logs
+    description: System audit log (Admin only)
+  - name: Blocks
+    description: Block and flat management
+
 paths:
+  # ─── AUTH ────────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new resident
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, fullName, flatId]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                fullName:
+                  type: string
+                phone:
+                  type: string
+                flatId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Registered successfully
+          headers:
+            Set-Cookie:
+              description: httpOnly refreshToken cookie set
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          accessToken:
+                            type: string
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /auth/login:
     post:
-      summary: User login
-      tags:
-        - Auth
+      tags: [Auth]
+      summary: Login and receive tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@society.com
+                password:
+                  type: string
+                  example: Admin@1234
+      responses:
+        '200':
+          description: Login successful — accessToken in body, refreshToken in httpOnly cookie
+          headers:
+            Set-Cookie:
+              description: httpOnly refreshToken cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          accessToken:
+                            type: string
+        '401':
+          description: Invalid credentials
+        '429':
+          description: Too many login attempts
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token using httpOnly cookie
+      security: []
+      description: >
+        Send this request with the httpOnly `refreshToken` cookie (set automatically by login).
+        Returns a new accessToken and rotates the refreshToken.
+      responses:
+        '200':
+          description: Token refreshed
+        '401':
+          description: Refresh token invalid or expired
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and revoke refresh token
+      responses:
+        '200':
+          description: Logged out successfully
+
+  # ─── USERS ───────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      tags: [Users]
+      summary: Get all users (Admin / Committee)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, committee_member, resident]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of users
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      responses:
+        '200':
+          description: Current user data
+
+    patch:
+      tags: [Users]
+      summary: Update own profile
       requestBody:
         required: true
         content:
@@ -27,36 +452,428 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                phone:
                   type: string
-                password:
+                fullName:
                   type: string
       responses:
         '200':
-          description: Successful login
+          description: Profile updated
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID (Admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User details
+        '404':
+          description: User not found
+
+    patch:
+      tags: [Users]
+      summary: Update user (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive, suspended]
+                role:
+                  type: string
+                  enum: [admin, committee_member, resident]
+      responses:
+        '200':
+          description: User updated
+
+    delete:
+      tags: [Users]
+      summary: Delete user (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  # ─── COMPLAINTS ──────────────────────────────────────────────────────────────
+  /complaints:
+    get:
+      tags: [Complaints]
+      summary: Get complaints (residents see own; admin/committee see all)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, resolved, closed]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated complaints list
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                  token:
-                    type: string
-                  user:
-                    type: object
-  /complaints:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Complaint'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Complaints]
+      summary: Create a complaint with optional image upload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [title, description, category]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                  enum: [plumbing, electrical, structural, security, cleanliness, noise, other]
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+                  default: low
+                image:
+                  type: string
+                  format: binary
+                  description: Image file — max 5MB, must be jpeg/png/gif/webp/bmp
+      responses:
+        '201':
+          description: Complaint created
+        '400':
+          description: Validation error or invalid file type
+
+  /complaints/{id}:
     get:
-      summary: Get all complaints
-      tags:
-        - Complaints
+      tags: [Complaints]
+      summary: Get complaint by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
-          description: A list of complaints
+          description: Complaint details
+        '404':
+          description: Not found
+
+  /complaints/{id}/status:
+    patch:
+      tags: [Complaints]
+      summary: Update complaint status (Admin / Committee only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [open, in_progress, resolved, closed]
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Status updated
+        '403':
+          description: Forbidden
+
+  # ─── BILLING ─────────────────────────────────────────────────────────────────
+  /billing:
+    get:
+      tags: [Billing]
+      summary: Get maintenance bills
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, paid, partially_paid, overdue]
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated bills list
+
+  /billing/single:
     post:
-      summary: Create a new complaint
-      tags:
-        - Complaints
+      tags: [Billing]
+      summary: Generate bill for a single flat (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [flatId, billingMonth, billingYear, amount, dueDate]
+              properties:
+                flatId:
+                  type: string
+                  format: uuid
+                billingMonth:
+                  type: integer
+                  minimum: 1
+                  maximum: 12
+                billingYear:
+                  type: integer
+                amount:
+                  type: number
+                dueDate:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Bill generated
+        '409':
+          description: Bill already exists for this month
+
+  /billing/bulk:
+    post:
+      tags: [Billing]
+      summary: Generate bills for all flats (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [billingMonth, billingYear, amount, dueDate]
+              properties:
+                billingMonth:
+                  type: integer
+                billingYear:
+                  type: integer
+                amount:
+                  type: number
+                dueDate:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Bulk bills generated
+
+  /billing/{id}:
+    get:
+      tags: [Billing]
+      summary: Get a specific bill
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Bill details
+
+    delete:
+      tags: [Billing]
+      summary: Delete a bill (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /billing/{id}/pay:
+    post:
+      tags: [Billing]
+      summary: Pay a maintenance bill
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, paymentMode]
+              properties:
+                amount:
+                  type: number
+                paymentMode:
+                  type: string
+                  enum: [upi, card, netbanking, cash]
+                transactionId:
+                  type: string
+      responses:
+        '200':
+          description: Payment recorded
+
+  # ─── PAYMENTS ────────────────────────────────────────────────────────────────
+  /payments:
+    get:
+      tags: [Payments]
+      summary: Get payment records
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated payments list
+
+    post:
+      tags: [Payments]
+      summary: Record a new payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [billId, amount, paymentMode]
+              properties:
+                billId:
+                  type: string
+                  format: uuid
+                amount:
+                  type: number
+                paymentMode:
+                  type: string
+                  enum: [upi, card, netbanking, cash]
+                transactionId:
+                  type: string
+      responses:
+        '201':
+          description: Payment recorded
+
+  # ─── ANNOUNCEMENTS ───────────────────────────────────────────────────────────
+  /announcements:
+    get:
+      tags: [Announcements]
+      summary: Get announcements (all authenticated users)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated announcements list
+
+    post:
+      tags: [Announcements]
+      summary: Create announcement (Admin / Committee only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content]
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                targetAudience:
+                  type: string
+                  enum: [all, residents, committee]
+                  default: all
+                isPinned:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Announcement created
+
+  /announcements/{id}:
+    get:
+      tags: [Announcements]
+      summary: Get announcement by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Announcement details
+
+    patch:
+      tags: [Announcements]
+      summary: Update announcement (Admin / Committee only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -66,84 +883,338 @@ paths:
               properties:
                 title:
                   type: string
-                description:
+                content:
                   type: string
-                category:
+                targetAudience:
                   type: string
-      responses:
-        '201':
-          description: Complaint created
-  /billing/maintenance:
-    post:
-      summary: Generate maintenance bills
-      tags:
-        - Billing
-      responses:
-        '201':
-          description: Bills generated successfully
-  /payments:
-    post:
-      summary: Process a payment
-      tags:
-        - Payments
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                billId:
-                  type: string
-                amount:
-                  type: number
-                paymentMethod:
-                  type: string
-      responses:
-        '201':
-          description: Payment successful
-  /announcements:
-    get:
-      summary: Get announcements
-      tags:
-        - Announcements
+                isPinned:
+                  type: boolean
       responses:
         '200':
-          description: Announcements list
+          description: Updated
+
+    delete:
+      tags: [Announcements]
+      summary: Delete announcement (Admin / Committee only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  # ─── SERVICE REQUESTS ────────────────────────────────────────────────────────
   /service-requests:
+    get:
+      tags: [Service Requests]
+      summary: Get service requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, completed]
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated service requests
+
     post:
-      summary: Create service request
-      tags:
-        - Service Requests
+      tags: [Service Requests]
+      summary: Create a service request
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [serviceType, preferredDate]
               properties:
                 serviceType:
                   type: string
-                description:
+                  enum: [plumber, electrician, carpenter, painter, pest_control, other]
+                preferredDate:
                   type: string
-                preferredTime:
+                  format: date-time
+                notes:
                   type: string
       responses:
         '201':
-          description: Request created
+          description: Service request created
+
+  /service-requests/{id}:
+    get:
+      tags: [Service Requests]
+      summary: Get service request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Service request details
+
+  /service-requests/{id}/status:
+    patch:
+      tags: [Service Requests]
+      summary: Update service request status (Admin / Committee only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [approved, rejected, completed]
+      responses:
+        '200':
+          description: Status updated
+
+  # ─── DASHBOARD ───────────────────────────────────────────────────────────────
   /dashboard/admin:
     get:
-      summary: Admin dashboard stats
-      tags:
-        - Dashboard
+      tags: [Dashboard]
+      summary: Admin dashboard stats (Admin only)
+      description: Returns KPIs, charts, recent activity. Cached for 5 minutes.
       responses:
         '200':
           description: Admin stats payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalResidents:
+                    type: integer
+                  totalFlats:
+                    type: integer
+                  vacantFlats:
+                    type: integer
+                  openComplaints:
+                    type: integer
+                  highPriorityOpenComplaints:
+                    type: integer
+                  collectionsThisMonth:
+                    type: number
+                  collectionGrowth:
+                    type: string
+                  maintenanceData:
+                    type: array
+                  complaintData:
+                    type: array
+                  occupancyData:
+                    type: array
+
+  /dashboard/committee:
+    get:
+      tags: [Dashboard]
+      summary: Committee dashboard stats (Admin / Committee)
+      responses:
+        '200':
+          description: Committee stats payload
+
   /dashboard/resident:
     get:
-      summary: Resident dashboard stats
-      tags:
-        - Dashboard
+      tags: [Dashboard]
+      summary: Resident personal dashboard
       responses:
         '200':
           description: Resident stats payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unpaidBills:
+                    type: array
+                  openComplaints:
+                    type: integer
+                  recentAnnouncements:
+                    type: array
+                  activeServiceRequests:
+                    type: integer
+
+  # ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Get current user's notifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated notifications list
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Get unread notification count
+      responses:
+        '200':
+          description: Count of unread notifications
+
+  /notifications/mark-all-read:
+    patch:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      responses:
+        '200':
+          description: All marked as read
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark a specific notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Marked as read
+
+  # ─── AUDIT LOGS ──────────────────────────────────────────────────────────────
+  /audit-logs:
+    get:
+      tags: [Audit Logs]
+      summary: Get audit logs (Admin only)
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: entityType
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated audit logs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+  # ─── BLOCKS ──────────────────────────────────────────────────────────────────
+  /blocks:
+    get:
+      tags: [Blocks]
+      summary: Get all blocks
+      responses:
+        '200':
+          description: List of blocks with flats
+
+    post:
+      tags: [Blocks]
+      summary: Create a block (Admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, floorCount]
+              properties:
+                name:
+                  type: string
+                  example: Block A
+                floorCount:
+                  type: integer
+      responses:
+        '201':
+          description: Block created
+
+  /blocks/{id}:
+    get:
+      tags: [Blocks]
+      summary: Get block by ID with flats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Block details
+
+    patch:
+      tags: [Blocks]
+      summary: Update block (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                floorCount:
+                  type: integer
+      responses:
+        '200':
+          description: Updated
+
+    delete:
+      tags: [Blocks]
+      summary: Delete block (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted

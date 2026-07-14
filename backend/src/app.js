@@ -1,6 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
+const { generalLimiter } = require('./shared/middleware/rateLimiter.middleware');
 const appConfig = require('./shared/config/app.config');
 const errorHandler = require('./shared/middleware/errorHandler.middleware');
 const { API } = require('./shared/constants');
@@ -16,6 +21,12 @@ app.use(cors({
   origin: appConfig.corsOrigin,
   credentials: true,
 }));
+
+// Parse cookies — needed for httpOnly refresh token cookie
+app.use(cookieParser());
+
+// Apply general rate limiter to all API routes
+app.use(generalLimiter);
 
 // Parse JSON request bodies
 app.use(express.json({ limit: '10kb' }));
@@ -36,6 +47,13 @@ app.use(`${API.PREFIX}/notifications`, require('./modules/notifications/notifica
 app.use(`${API.PREFIX}/audit-logs`, require('./modules/auditLogs/auditLogs.routes'));
 app.use(`${API.PREFIX}/blocks`, require('./modules/blocks/blocks.routes'));
 // etc.
+
+// ─── API Documentation ─────────────────────────────────────
+const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customSiteTitle: 'Society API Docs',
+  customCss: '.swagger-ui .topbar { display: none }',
+}));
 
 // ─── Health Check ──────────────────────────────────────────
 app.get('/health', (req, res) => {
