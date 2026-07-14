@@ -128,15 +128,7 @@ export default function Login() {
 
       {/* Right Section - Form Area */}
       <div className="flex-1 flex flex-col bg-white relative">
-        {/* Language Selector */}
-        <div className="absolute top-6 right-8">
-          <Button variant="outline" size="sm" className="gap-2 rounded-lg bg-white border-slate-200 text-slate-600 hover:bg-slate-50">
-            <Globe className="w-4 h-4" />
-            English
-            <ChevronDown className="w-3 h-3 ml-1" />
-          </Button>
-        </div>
-
+      
         {/* Main Form Container */}
         <div className="flex-1 flex flex-col justify-center max-w-[420px] w-full mx-auto px-6 py-12">
           <div className="text-center mb-10">
@@ -188,12 +180,7 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-between pt-1">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" className="border-slate-300 data-[state=checked]:bg-[#0a192f] data-[state=checked]:border-[#0a192f]" />
-                <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer font-medium select-none">
-                  Remember Me
-                </label>
-              </div>
+              
               <a href="#" className="text-sm text-[#0a192f] font-semibold hover:underline">Forgot Password?</a>
             </div>
 
@@ -207,33 +194,11 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-slate-400 font-medium">or continue with</span>
-            </div>
-          </div>
+          
 
-          <div className="grid grid-cols-3 gap-3">
-            <Button variant="outline" className="h-11 rounded-lg gap-2 text-slate-600 font-medium border-slate-200 bg-white hover:bg-slate-50">
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-4 h-4" alt="Google" /> 
-              <span className="hidden sm:inline">Google</span>
-            </Button>
-            <Button variant="outline" className="h-11 rounded-lg gap-2 text-slate-600 font-medium border-slate-200 bg-white hover:bg-slate-50">
-              <img src="https://www.svgrepo.com/show/475662/microsoft.svg" className="w-4 h-4" alt="Microsoft" /> 
-              <span className="hidden sm:inline">Microsoft</span>
-            </Button>
-            <Button variant="outline" className="h-11 rounded-lg gap-2 text-slate-600 font-medium border-slate-200 bg-white hover:bg-slate-50">
-              <UserCheck className="w-4 h-4" /> 
-              <span className="hidden sm:inline">SSO Login</span>
-            </Button>
-          </div>
+          
 
-          <p className="text-center text-sm text-slate-600 mt-10">
-            Don't have an account? <a href="#" className="text-[#0a192f] font-semibold hover:underline">Contact Admin</a>
-          </p>
+          
         </div>
 
         {/* Footer */}
