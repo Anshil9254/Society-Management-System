@@ -18,6 +18,10 @@ const BillingRepository = require('./modules/billing/billing.repository');
 const BillingService = require('./modules/billing/billing.service');
 const BillingController = require('./modules/billing/billing.controller');
 
+const PaymentsRepository = require('./modules/payments/payments.repository');
+const PaymentsService = require('./modules/payments/payments.service');
+const PaymentsController = require('./modules/payments/payments.controller');
+
 const CacheService = require('./shared/services/cache.service');
 
 class Container {
@@ -73,6 +77,16 @@ class Container {
 
     const billingController = new BillingController(this.get('billingService'));
     this.services.set('billingController', billingController);
+
+    // Payments Module
+    const paymentsRepository = new PaymentsRepository(this.get('prisma'));
+    this.services.set('paymentsRepository', paymentsRepository);
+
+    const paymentsService = new PaymentsService(this.get('paymentsRepository'), this.get('eventBus'));
+    this.services.set('paymentsService', paymentsService);
+
+    const paymentsController = new PaymentsController(this.get('paymentsService'));
+    this.services.set('paymentsController', paymentsController);
 
     // Other modules will be added here
   }
