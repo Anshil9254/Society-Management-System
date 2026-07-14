@@ -6,6 +6,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+loglevel-debug.log*
+vite-debug.log*
+logs/
 
 node_modules
 dist
@@ -24,3 +27,11 @@ dist-ssr
 *.sw?
 .agent
 skills
+
+# ─── Backend ─────────────────────────────────────────────
+backend/.env
+backend/node_modules/
+backend/uploads/complaints/*
+!backend/uploads/complaints/.gitkeep
+backend/logs/
+backend/prisma/*.db
