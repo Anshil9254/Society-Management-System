@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: Society Management System API
+  description: API documentation for the Society Management System backend.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+                  user:
+                    type: object
+  /complaints:
+    get:
+      summary: Get all complaints
+      tags:
+        - Complaints
+      responses:
+        '200':
+          description: A list of complaints
+    post:
+      summary: Create a new complaint
+      tags:
+        - Complaints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+      responses:
+        '201':
+          description: Complaint created
+  /billing/maintenance:
+    post:
+      summary: Generate maintenance bills
+      tags:
+        - Billing
+      responses:
+        '201':
+          description: Bills generated successfully
+  /payments:
+    post:
+      summary: Process a payment
+      tags:
+        - Payments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                billId:
+                  type: string
+                amount:
+                  type: number
+                paymentMethod:
+                  type: string
+      responses:
+        '201':
+          description: Payment successful
+  /announcements:
+    get:
+      summary: Get announcements
+      tags:
+        - Announcements
+      responses:
+        '200':
+          description: Announcements list
+  /service-requests:
+    post:
+      summary: Create service request
+      tags:
+        - Service Requests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                serviceType:
+                  type: string
+                description:
+                  type: string
+                preferredTime:
+                  type: string
+      responses:
+        '201':
+          description: Request created
+  /dashboard/admin:
+    get:
+      summary: Admin dashboard stats
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Admin stats payload
+  /dashboard/resident:
+    get:
+      summary: Resident dashboard stats
+      tags:
+        - Dashboard
+      responses:
+        '200':
+          description: Resident stats payload
