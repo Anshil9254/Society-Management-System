@@ -22,6 +22,10 @@ const PaymentsRepository = require('./modules/payments/payments.repository');
 const PaymentsService = require('./modules/payments/payments.service');
 const PaymentsController = require('./modules/payments/payments.controller');
 
+const AnnouncementsRepository = require('./modules/announcements/announcements.repository');
+const AnnouncementsService = require('./modules/announcements/announcements.service');
+const AnnouncementsController = require('./modules/announcements/announcements.controller');
+
 const CacheService = require('./shared/services/cache.service');
 
 class Container {
@@ -87,6 +91,20 @@ class Container {
 
     const paymentsController = new PaymentsController(this.get('paymentsService'));
     this.services.set('paymentsController', paymentsController);
+
+    // Announcements Module
+    const announcementsRepository = new AnnouncementsRepository(this.get('prisma'));
+    this.services.set('announcementsRepository', announcementsRepository);
+
+    const announcementsService = new AnnouncementsService(
+      this.get('announcementsRepository'),
+      this.get('cacheService'),
+      this.get('eventBus')
+    );
+    this.services.set('announcementsService', announcementsService);
+
+    const announcementsController = new AnnouncementsController(this.get('announcementsService'));
+    this.services.set('announcementsController', announcementsController);
 
     // Other modules will be added here
   }

@@ -29,6 +29,7 @@ app.use(`${API.PREFIX}/users`, require('./modules/users/users.routes'));
 app.use(`${API.PREFIX}/complaints`, require('./modules/complaints/complaints.routes'));
 app.use(`${API.PREFIX}/billing`, require('./modules/billing/billing.routes'));
 app.use(`${API.PREFIX}/payments`, require('./modules/payments/payments.routes'));
+app.use(`${API.PREFIX}/announcements`, require('./modules/announcements/announcements.routes'));
 // etc.
 
 // ─── Health Check ──────────────────────────────────────────
