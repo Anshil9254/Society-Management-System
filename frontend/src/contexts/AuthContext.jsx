@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
     try {
       const data = await api.post('/auth/login', { email, password });
       
-      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('token', data.data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
       setUser(data.data.user);
       
@@ -45,10 +45,16 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    }
   };
 
   return (

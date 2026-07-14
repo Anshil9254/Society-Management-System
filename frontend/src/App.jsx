@@ -5,7 +5,22 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Unauthorized from './pages/Unauthorized'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import CommitteeDashboard from './pages/committee/CommitteeDashboard'
 import ResidentDashboard from './pages/resident/ResidentDashboard'
+import { useAuth } from './contexts/AuthContext'
+
+const RootRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+  if (user.role === 'committee_member') {
+    return <Navigate to="/committee" replace />;
+  }
+  return <Navigate to="/resident" replace />;
+};
 
 function App() {
   return (
@@ -16,9 +31,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             
-            {/* Admin & Committee Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['admin', 'committee']} />}>
-              <Route path="/admin" element={<div className="p-8"><AdminDashboard /></div>} />
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+            </Route>
+            
+            {/* Committee Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['committee_member']} />}>
+              <Route path="/committee" element={<div className="p-8"><CommitteeDashboard /></div>} />
             </Route>
             
             {/* Resident Routes */}
@@ -26,8 +46,8 @@ function App() {
               <Route path="/resident" element={<ResidentDashboard />} />
             </Route>
             
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="*" element={<RootRedirect />} />
           </Routes>
         </div>
       </BrowserRouter>
