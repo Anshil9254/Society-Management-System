@@ -1,5 +1,5 @@
 const apiResponse = require('../../shared/utils/apiResponse');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 class DashboardController {
   constructor(dashboardService) {
@@ -9,7 +9,7 @@ class DashboardController {
   getDashboardStats = async (req, res) => {
     let stats;
     
-    if (req.user.role === Roles.ADMIN || req.user.role === Roles.COMMITTEE) {
+    if (req.user.role === ROLES.ADMIN || req.user.role === ROLES.COMMITTEE) {
       stats = await this.service.getAdminDashboardStats();
     } else {
       // Resident
