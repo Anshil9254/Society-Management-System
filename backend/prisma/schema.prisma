@@ -307,3 +307,20 @@ model AuditLog {
   @@index([entityType, entityId])
   @@map("audit_logs")
 }
+
+// ============================================================================
+// 9. Events
+// ============================================================================
+
+model Event {
+  id             String   @id @default(uuid()) @db.Uuid
+  title          String
+  description    String
+  eventDate      DateTime @map("event_date")
+  location       String?
+  organizer      String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("events")
+}
