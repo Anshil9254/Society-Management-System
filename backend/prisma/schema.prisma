@@ -1,0 +1,309 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// 1. Core Auth & Users
+// ============================================================================
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  phone        String?
+  role         String   @default("resident") // admin, committee_member, resident
+  status       String   @default("active") // active, inactive, suspended
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  residentProfile ResidentProfile?
+  complaints      Complaint[]
+  payments        Payment[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]       @relation("Actor")
+  serviceRequests ServiceRequest[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// 2. Society Structure (Blocks & Flats)
+// ============================================================================
+
+model Block {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique // e.g., "Block A"
+  floorCount  Int      @map("floor_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  flats       Flat[]
+
+  @@map("blocks")
+}
+
+model Flat {
+  id          String   @id @default(uuid()) @db.Uuid
+  blockId     String   @map("block_id") @db.Uuid
+  flatNumber  String   @map("flat_number") // e.g., "A-101"
+  type        String   // 2BHK, 3BHK, etc. (affects maintenance calculation)
+  squareFeet  Int?     @map("square_feet")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  block           Block            @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  residents       ResidentProfile[]
+  familyMembers   FamilyMember[]
+  vehicles        Vehicle[]
+  visitors        Visitor[]
+  helpers         DomesticHelper[]
+  bills           MaintenanceBill[]
+
+  @@unique([blockId, flatNumber])
+  @@map("flats")
+}
+
+// ============================================================================
+// 3. Resident Data
+// ============================================================================
+
+model ResidentProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  flatId         String   @map("flat_id") @db.Uuid
+  fullName       String   @map("full_name")
+  moveInDate     DateTime @map("move_in_date")
+  isOwner        Boolean  @default(true) @map("is_owner")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flat           Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+
+  @@map("resident_profiles")
+}
+
+model FamilyMember {
+  id             String   @id @default(uuid()) @db.Uuid
+  flatId         String   @map("flat_id") @db.Uuid
+  fullName       String   @map("full_name")
+  relation       String   // e.g., "Spouse", "Child"
+  age            Int?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  flat           Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+
+  @@map("family_members")
+}
+
+model Vehicle {
+  id             String   @id @default(uuid()) @db.Uuid
+  flatId         String   @map("flat_id") @db.Uuid
+  vehicleNumber  String   @unique @map("vehicle_number") // e.g., "MH-12-AB-1234"
+  type           String   // "2-wheeler", "4-wheeler"
+  makeModel      String?  @map("make_model")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  flat           Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+
+  @@map("vehicles")
+}
+
+// ============================================================================
+// 4. Visitors & Helpers
+// ============================================================================
+
+model Visitor {
+  id             String   @id @default(uuid()) @db.Uuid
+  flatId         String   @map("flat_id") @db.Uuid
+  fullName       String   @map("full_name")
+  phone          String?
+  purpose        String
+  entryTime      DateTime @default(now()) @map("entry_time")
+  exitTime       DateTime? @map("exit_time")
+
+  // Relations
+  flat           Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+
+  @@map("visitors")
+}
+
+model DomesticHelper {
+  id             String   @id @default(uuid()) @db.Uuid
+  flatId         String   @map("flat_id") @db.Uuid
+  fullName       String   @map("full_name")
+  role           String   // e.g., "Maid", "Driver", "Cook"
+  phone          String?
+  idProofNumber  String?  @map("id_proof_number")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  flat           Flat     @relation(fields: [flatId], references: [id], onDelete: Cascade)
+
+  @@map("domestic_helpers")
+}
+
+// ============================================================================
+// 5. Complaints & Service Requests
+// ============================================================================
+
+model Complaint {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  title          String
+  description    String
+  category       String   // plumbing, electrical, etc.
+  priority       String   @default("low") // low, medium, high
+  status         String   @default("open") // open, in_progress, resolved, closed
+  imageUrl       String?  @map("image_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statusLogs     ComplaintStatusLog[]
+
+  @@map("complaints")
+}
+
+model ComplaintStatusLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  complaintId    String   @map("complaint_id") @db.Uuid
+  status         String
+  comment        String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  complaint      Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@map("complaint_status_logs")
+}
+
+model ServiceRequest {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  serviceType    String   @map("service_type") // plumber, electrician, etc.
+  preferredDate  DateTime @map("preferred_date")
+  status         String   @default("pending") // pending, approved, rejected, completed
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("service_requests")
+}
+
+// ============================================================================
+// 6. Billing & Payments
+// ============================================================================
+
+model MaintenanceBill {
+  id             String   @id @default(uuid()) @db.Uuid
+  flatId         String   @map("flat_id") @db.Uuid
+  billingMonth   Int      @map("billing_month") // 1-12
+  billingYear    Int      @map("billing_year")  // e.g. 2026
+  amount         Decimal  @db.Decimal(10, 2)
+  dueDate        DateTime @map("due_date")
+  status         String   @default("pending") // pending, paid, partially_paid, overdue
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  flat           Flat      @relation(fields: [flatId], references: [id], onDelete: Cascade)
+  payments       Payment[]
+
+  @@unique([flatId, billingMonth, billingYear])
+  @@index([flatId])
+  @@index([status])
+  @@map("maintenance_bills")
+}
+
+model Payment {
+  id             String   @id @default(uuid()) @db.Uuid
+  billId         String   @map("bill_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  amount         Decimal  @db.Decimal(10, 2)
+  paymentMode    String   @map("payment_mode") // upi, card, netbanking, cash
+  transactionId  String?  @unique @map("transaction_id")
+  status         String   @default("pending") // pending, success, failed
+  paidAt         DateTime @default(now()) @map("paid_at")
+
+  // Relations
+  bill           MaintenanceBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([billId])
+  @@map("payments")
+}
+
+// ============================================================================
+// 7. Communication & Announcements
+// ============================================================================
+
+model Announcement {
+  id             String   @id @default(uuid()) @db.Uuid
+  title          String
+  content        String
+  targetAudience String   @default("all") @map("target_audience") // all, residents, committee
+  isPinned       Boolean  @default(false) @map("is_pinned")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("announcements")
+}
+
+model Notification {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  title          String
+  message        String
+  type           String   // e.g., "bill", "complaint", "announcement"
+  isRead         Boolean  @default(false) @map("is_read")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+// ============================================================================
+// 8. Security & Audit
+// ============================================================================
+
+model AuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String?  @map("user_id") @db.Uuid
+  action         String   // e.g., "COMPLAINT_UPDATED", "BILL_GENERATED"
+  entityType     String   @map("entity_type") // e.g., "Complaint"
+  entityId       String   @map("entity_id")
+  details        Json?    // Stores what exactly changed (old vs new)
+  ipAddress      String?  @map("ip_address")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  actor          User?    @relation("Actor", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
