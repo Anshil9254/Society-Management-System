@@ -24,7 +24,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // ─── API Routes (Registered here as modules are built) ───────
-// app.use(`${API.PREFIX}/auth`, require('./modules/auth/auth.routes'));
+app.use(`${API.PREFIX}/auth`, require('./modules/auth/auth.routes'));
 // app.use(`${API.PREFIX}/users`, require('./modules/users/users.routes'));
 // etc.
 

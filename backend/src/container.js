@@ -1,30 +1,41 @@
 const prisma = require('./shared/config/database.config');
-const { eventBus } = require('./shared/events');
+const { EventBus } = require('./shared/events');
 const redisClient = require('./shared/config/redis.config');
 
-/**
- * Dependency Injection (DI) Container.
- * 
- * Centralizes the wiring of all Repositories, Services, and Controllers.
- * No module instantiates its own dependencies. This makes testing easy
- * (we can pass mock repos to services) and keeps modules decoupled.
- * 
- * As we build out modules in Phases 3 and 4, we will register them here.
- */
+const AuthRepository = require('./modules/auth/auth.repository');
+const AuthService = require('./modules/auth/auth.service');
+const AuthController = require('./modules/auth/auth.controller');
 
-// ─── Repositories ──────────────────────────────────────────
-// const AuthRepository = require('./modules/auth/auth.repository');
-// const authRepository = new AuthRepository(prisma);
+class Container {
+  constructor() {
+    this.services = new Map();
 
-// ─── Services ──────────────────────────────────────────────
-// const AuthService = require('./modules/auth/auth.service');
-// const authService = new AuthService(authRepository, eventBus, redisClient);
+    // Core
+    this.services.set('prisma', prisma);
+    this.services.set('redisClient', redisClient);
+    this.services.set('eventBus', EventBus.getInstance());
 
-// ─── Controllers ───────────────────────────────────────────
-// const AuthController = require('./modules/auth/auth.controller');
-// const authController = new AuthController(authService);
+    // Auth Module
+    const authRepository = new AuthRepository(this.get('prisma'));
+    this.services.set('authRepository', authRepository);
 
-module.exports = {
-  // authController,
-  prisma,
-};
+    const authService = new AuthService(this.get('authRepository'), this.get('redisClient'));
+    this.services.set('authService', authService);
+
+    const authController = new AuthController(this.get('authService'));
+    this.services.set('authController', authController);
+
+    // Other modules will be added here
+  }
+
+  get(name) {
+    if (!this.services.has(name)) {
+      throw new Error(`Dependency ${name} not found in container`);
+    }
+    return this.services.get(name);
+  }
+}
+
+// Singleton instance
+const container = new Container();
+module.exports = container;
