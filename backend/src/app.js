@@ -31,6 +31,9 @@ app.use(`${API.PREFIX}/billing`, require('./modules/billing/billing.routes'));
 app.use(`${API.PREFIX}/payments`, require('./modules/payments/payments.routes'));
 app.use(`${API.PREFIX}/announcements`, require('./modules/announcements/announcements.routes'));
 app.use(`${API.PREFIX}/service-requests`, require('./modules/serviceRequests/serviceRequests.routes'));
+app.use(`${API.PREFIX}/dashboard`, require('./modules/dashboard/dashboard.routes'));
+app.use(`${API.PREFIX}/notifications`, require('./modules/notifications/notifications.routes'));
+app.use(`${API.PREFIX}/audit-logs`, require('./modules/auditLogs/auditLogs.routes'));
 // etc.
 
 // ─── Health Check ──────────────────────────────────────────

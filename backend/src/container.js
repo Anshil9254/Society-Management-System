@@ -30,6 +30,17 @@ const ServiceRequestsRepository = require('./modules/serviceRequests/serviceRequ
 const ServiceRequestsService = require('./modules/serviceRequests/serviceRequests.service');
 const ServiceRequestsController = require('./modules/serviceRequests/serviceRequests.controller');
 
+const DashboardService = require('./modules/dashboard/dashboard.service');
+const DashboardController = require('./modules/dashboard/dashboard.controller');
+
+const NotificationsRepository = require('./modules/notifications/notifications.repository');
+const NotificationsService = require('./modules/notifications/notifications.service');
+const NotificationsController = require('./modules/notifications/notifications.controller');
+
+const AuditLogsRepository = require('./modules/auditLogs/auditLogs.repository');
+const AuditLogsService = require('./modules/auditLogs/auditLogs.service');
+const AuditLogsController = require('./modules/auditLogs/auditLogs.controller');
+
 const CacheService = require('./shared/services/cache.service');
 
 class Container {
@@ -122,6 +133,33 @@ class Container {
 
     const serviceRequestsController = new ServiceRequestsController(this.get('serviceRequestsService'));
     this.services.set('serviceRequestsController', serviceRequestsController);
+
+    // Dashboard Module
+    const dashboardService = new DashboardService(this.get('prisma'), this.get('cacheService'));
+    this.services.set('dashboardService', dashboardService);
+
+    const dashboardController = new DashboardController(this.get('dashboardService'));
+    this.services.set('dashboardController', dashboardController);
+
+    // Notifications Module
+    const notificationsRepository = new NotificationsRepository(this.get('prisma'));
+    this.services.set('notificationsRepository', notificationsRepository);
+
+    const notificationsService = new NotificationsService(this.get('notificationsRepository'));
+    this.services.set('notificationsService', notificationsService);
+
+    const notificationsController = new NotificationsController(this.get('notificationsService'));
+    this.services.set('notificationsController', notificationsController);
+
+    // Audit Logs Module
+    const auditLogsRepository = new AuditLogsRepository(this.get('prisma'));
+    this.services.set('auditLogsRepository', auditLogsRepository);
+
+    const auditLogsService = new AuditLogsService(this.get('auditLogsRepository'));
+    this.services.set('auditLogsService', auditLogsService);
+
+    const auditLogsController = new AuditLogsController(this.get('auditLogsService'));
+    this.services.set('auditLogsController', auditLogsController);
 
     // Other modules will be added here
   }
