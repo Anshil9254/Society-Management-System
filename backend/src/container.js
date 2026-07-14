@@ -6,6 +6,10 @@ const AuthRepository = require('./modules/auth/auth.repository');
 const AuthService = require('./modules/auth/auth.service');
 const AuthController = require('./modules/auth/auth.controller');
 
+const UsersRepository = require('./modules/users/users.repository');
+const UsersService = require('./modules/users/users.service');
+const UsersController = require('./modules/users/users.controller');
+
 class Container {
   constructor() {
     this.services = new Map();
@@ -24,6 +28,16 @@ class Container {
 
     const authController = new AuthController(this.get('authService'));
     this.services.set('authController', authController);
+
+    // Users Module
+    const usersRepository = new UsersRepository(this.get('prisma'));
+    this.services.set('usersRepository', usersRepository);
+
+    const usersService = new UsersService(this.get('usersRepository'));
+    this.services.set('usersService', usersService);
+
+    const usersController = new UsersController(this.get('usersService'));
+    this.services.set('usersController', usersController);
 
     // Other modules will be added here
   }
