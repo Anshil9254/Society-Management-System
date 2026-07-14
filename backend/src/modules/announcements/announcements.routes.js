@@ -2,7 +2,7 @@ const express = require('express');
 const { createAnnouncementSchema, updateAnnouncementSchema } = require('./announcements.validator');
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const container = require('../../container');
 const announcementsController = container.get('announcementsController');
@@ -30,7 +30,7 @@ router.get(
 );
 
 // ─── Admin/Committee Only Routes ──────────────────────────
-router.use(requireRole(Roles.ADMIN, Roles.COMMITTEE));
+router.use(requireRole(ROLES.ADMIN, ROLES.COMMITTEE));
 
 /**
  * @route POST /api/v1/announcements

@@ -1,7 +1,7 @@
 const { NotFoundError } = require('../../shared/errors');
 const { AnnouncementResponseDTO } = require('./announcements.dto');
 const paginate = require('../../shared/utils/paginate');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 class AnnouncementsService {
   constructor(announcementsRepository, cacheService, eventBus) {
@@ -35,7 +35,7 @@ class AnnouncementsService {
     const filters = {};
 
     // If resident, they can see 'all' or 'residents' target audience.
-    if (user.role === Roles.RESIDENT) {
+    if (user.role === ROLES.RESIDENT) {
       filters.targetAudience = { in: ['all', 'residents'] };
     }
 
