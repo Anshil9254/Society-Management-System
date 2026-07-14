@@ -10,6 +10,8 @@ const UsersRepository = require('./modules/users/users.repository');
 const UsersService = require('./modules/users/users.service');
 const UsersController = require('./modules/users/users.controller');
 
+const CacheService = require('./shared/services/cache.service');
+
 class Container {
   constructor() {
     this.services = new Map();
@@ -18,6 +20,7 @@ class Container {
     this.services.set('prisma', prisma);
     this.services.set('redisClient', redisClient);
     this.services.set('eventBus', EventBus.getInstance());
+    this.services.set('cacheService', new CacheService(this.get('redisClient')));
 
     // Auth Module
     const authRepository = new AuthRepository(this.get('prisma'));
