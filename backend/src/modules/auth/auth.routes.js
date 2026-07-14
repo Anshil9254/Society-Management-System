@@ -2,6 +2,7 @@ const express = require('express');
 const { registerSchema, loginSchema, refreshTokenSchema } = require('./auth.validator');
 const validate = require('../../shared/middleware/validate.middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
+const { authLimiter } = require('../../shared/middleware/rateLimiter.middleware');
 
 // DI setup: getting instances from the container
 const container = require('../../container');
@@ -15,6 +16,7 @@ const router = express.Router();
  */
 router.post(
   '/register',
+  authLimiter,           // ← Brute-force protection
   validate(registerSchema),
   asyncHandler(authController.register)
 );
@@ -25,6 +27,7 @@ router.post(
  */
 router.post(
   '/login',
+  authLimiter,           // ← Brute-force protection
   validate(loginSchema),
   asyncHandler(authController.login)
 );
@@ -35,8 +38,6 @@ router.post(
  */
 router.post(
   '/refresh',
-  // validation is skipped here to allow falling back to cookies in controller, 
-  // but could validate body if needed.
   asyncHandler(authController.refreshToken)
 );
 
@@ -50,3 +51,4 @@ router.post(
 );
 
 module.exports = router;
+
