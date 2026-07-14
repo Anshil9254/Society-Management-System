@@ -3,7 +3,7 @@ const { createComplaintSchema, updateComplaintStatusSchema } = require('./compla
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
 const upload = require('../../shared/middleware/upload.middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const container = require('../../container');
 const complaintsController = container.get('complaintsController');
@@ -52,7 +52,7 @@ router.get(
  */
 router.patch(
   '/:id/status',
-  requireRole(Roles.ADMIN, Roles.COMMITTEE),
+  requireRole(ROLES.ADMIN, ROLES.COMMITTEE),
   validate(updateComplaintStatusSchema),
   auditLog('UPDATE_COMPLAINT_STATUS', 'Complaint', (req) => req.params.id),
   asyncHandler(complaintsController.updateStatus)

@@ -1,7 +1,7 @@
 const { NotFoundError, ForbiddenError } = require('../../shared/errors');
 const { ComplaintResponseDTO } = require('./complaints.dto');
 const paginate = require('../../shared/utils/paginate');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 class ComplaintsService {
   constructor(complaintsRepository, eventBus, cacheService) {
@@ -39,7 +39,7 @@ class ComplaintsService {
     const filters = {};
     
     // Residents only see their own complaints. Admin/Committee see all.
-    if (user.role === Roles.RESIDENT) {
+    if (user.role === ROLES.RESIDENT) {
       filters.userId = user.id;
     }
 
@@ -64,7 +64,7 @@ class ComplaintsService {
     }
 
     // Auth check: Resident can only view their own
-    if (user.role === Roles.RESIDENT && complaint.userId !== user.id) {
+    if (user.role === ROLES.RESIDENT && complaint.userId !== user.id) {
       throw new ForbiddenError('You can only access your own complaints');
     }
 
