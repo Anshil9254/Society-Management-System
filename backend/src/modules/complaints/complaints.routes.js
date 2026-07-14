@@ -2,6 +2,7 @@ const express = require('express');
 const { createComplaintSchema, updateComplaintStatusSchema } = require('./complaints.validator');
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
 const upload = require('../../shared/middleware/upload.middleware');
+const { validateImageBytes } = require('../../shared/middleware/upload.middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
 const { ROLES } = require('../../shared/constants');
 
@@ -18,10 +19,10 @@ router.use(requireAuth);
  */
 router.post(
   '/',
-  upload.single('image'), // Must come before validate if body includes text fields sent as multipart/form-data
+  upload.single('image'),       // Step 1: Save file to disk, check declared MIME
+  validateImageBytes,           // Step 2: Verify actual binary content (magic bytes)
   (req, res, next) => {
-    // Because multer parses multipart/form-data, numbers might come as strings. 
-    // Zod can handle parsing if configured, or we let validation proceed on req.body.
+    // multer parses multipart/form-data — text fields arrive as strings
     next();
   },
   validate(createComplaintSchema),
