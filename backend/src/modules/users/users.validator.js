@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const updateProfileSchema = z.object({
   phone: z.string().regex(/^\d{10}$/, 'Phone must be a 10-digit number').optional(),
@@ -7,7 +7,7 @@ const updateProfileSchema = z.object({
 });
 
 const updateRoleSchema = z.object({
-  role: z.enum([Roles.ADMIN, Roles.COMMITTEE, Roles.RESIDENT]),
+  role: z.enum([ROLES.ADMIN, ROLES.COMMITTEE, ROLES.RESIDENT]),
 });
 
 const updateStatusSchema = z.object({

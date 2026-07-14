@@ -2,7 +2,7 @@ const express = require('express');
 const { updateProfileSchema, updateRoleSchema, updateStatusSchema } = require('./users.validator');
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const container = require('../../container');
 const usersController = container.get('usersController');
@@ -23,7 +23,7 @@ router.patch(
 
 // ─── Admin/Committee Only Routes ────────────────────────────
 // Require Admin or Committee Member role
-router.use(requireRole(Roles.ADMIN, Roles.COMMITTEE));
+router.use(requireRole(ROLES.ADMIN, ROLES.COMMITTEE));
 
 router.get('/', asyncHandler(usersController.getAllUsers));
 router.get('/:id', asyncHandler(usersController.getUserById));
@@ -31,7 +31,7 @@ router.get('/:id', asyncHandler(usersController.getUserById));
 // Only Admin can change roles and statuses, and we log these actions
 router.patch(
   '/:id/role',
-  requireRole(Roles.ADMIN),
+  requireRole(ROLES.ADMIN),
   validate(updateRoleSchema),
   auditLog('UPDATE_USER_ROLE', 'User', (req) => req.params.id),
   asyncHandler(usersController.updateRole)
@@ -39,7 +39,7 @@ router.patch(
 
 router.patch(
   '/:id/status',
-  requireRole(Roles.ADMIN),
+  requireRole(ROLES.ADMIN),
   validate(updateStatusSchema),
   auditLog('UPDATE_USER_STATUS', 'User', (req) => req.params.id),
   asyncHandler(usersController.updateStatus)
