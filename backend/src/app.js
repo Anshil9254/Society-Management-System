@@ -27,6 +27,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(`${API.PREFIX}/auth`, require('./modules/auth/auth.routes'));
 app.use(`${API.PREFIX}/users`, require('./modules/users/users.routes'));
 app.use(`${API.PREFIX}/complaints`, require('./modules/complaints/complaints.routes'));
+app.use(`${API.PREFIX}/billing`, require('./modules/billing/billing.routes'));
 // etc.
 
 // ─── Health Check ──────────────────────────────────────────

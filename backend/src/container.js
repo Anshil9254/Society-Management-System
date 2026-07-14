@@ -14,6 +14,10 @@ const ComplaintsRepository = require('./modules/complaints/complaints.repository
 const ComplaintsService = require('./modules/complaints/complaints.service');
 const ComplaintsController = require('./modules/complaints/complaints.controller');
 
+const BillingRepository = require('./modules/billing/billing.repository');
+const BillingService = require('./modules/billing/billing.service');
+const BillingController = require('./modules/billing/billing.controller');
+
 const CacheService = require('./shared/services/cache.service');
 
 class Container {
@@ -59,6 +63,16 @@ class Container {
 
     const complaintsController = new ComplaintsController(this.get('complaintsService'));
     this.services.set('complaintsController', complaintsController);
+
+    // Billing Module
+    const billingRepository = new BillingRepository(this.get('prisma'));
+    this.services.set('billingRepository', billingRepository);
+
+    const billingService = new BillingService(this.get('billingRepository'), this.get('eventBus'));
+    this.services.set('billingService', billingService);
+
+    const billingController = new BillingController(this.get('billingService'));
+    this.services.set('billingController', billingController);
 
     // Other modules will be added here
   }
