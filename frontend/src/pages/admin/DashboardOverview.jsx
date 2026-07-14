@@ -1,17 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Users, Building2, IndianRupee, AlertTriangle, 
-  ArrowUp, ArrowDown, UserPlus, FilePlus, Bell, Calendar, Minus
+import {
+  Users, Building2, IndianRupee, AlertTriangle,
+  ArrowUp, ArrowDown, UserPlus, FilePlus, Bell, Calendar
 } from 'lucide-react';
-import { 
+import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell
 } from 'recharts';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 export default function DashboardOverview({ stats }) {
-  // Map real data from backend
   const totalResidents = stats?.totalResidents || 0;
   const totalFlats = stats?.totalFlats || 0;
   const vacantFlats = stats?.vacantFlats || 0;
@@ -26,36 +26,35 @@ export default function DashboardOverview({ stats }) {
     'open': '#ef4444',
     'in_progress': '#3b82f6',
     'resolved': '#10b981',
-    'closed': '#9ca3af',
+    'closed': '#94a3b8',
   };
 
   const complaintStatusData = (stats?.complaintData || []).map(item => ({
     name: item.name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
     value: item.value,
-    color: complaintStatusColors[item.name] || '#9ca3af'
+    color: complaintStatusColors[item.name] || '#94a3b8'
   }));
 
   const occupancyData = (stats?.occupancyData || []).map(item => ({
     ...item,
-    color: item.name === 'Occupied' ? '#10b981' : '#d1d5db'
+    color: item.name === 'Occupied' ? '#10b981' : '#cbd5e1'
   }));
 
   const occupancyPercentage = totalFlats > 0 ? Math.round(((totalFlats - vacantFlats) / totalFlats) * 100) : 0;
-
   const recentNotifications = stats?.recentNotifications || [];
   const upcomingEvents = stats?.upcomingEvents || [];
 
   const formatTimeAgo = (dateString) => {
-    if(!dateString) return '';
+    if (!dateString) return '';
     const diff = Math.floor((new Date() - new Date(dateString)) / 1000);
     if (diff < 60) return `${diff} sec ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`;
-    return `${Math.floor(diff / 86400)} days ago`;
+    return `${Math.floor(diff / 86400)} d ago`;
   };
 
   const formatEventDate = (dateString) => {
-    if(!dateString) return { day: '', month: '', time: '' };
+    if (!dateString) return { day: '', month: '', time: '' };
     const d = new Date(dateString);
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return {
@@ -65,269 +64,295 @@ export default function DashboardOverview({ stats }) {
     };
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="space-y-6 pb-12"
+    >
       {/* Top Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-              <Users className="w-7 h-7" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">Total Residents</p>
-              <h3 className="text-2xl font-bold text-slate-800">{totalResidents}</h3>
-              {/* Note: Growth metric for residents not provided in backend yet, keeping placeholder formatting */}
-              <p className="text-xs text-green-500 flex items-center font-medium mt-1">
-                 Total Profiles
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-blue-900/5 bg-white overflow-hidden relative group hover:-translate-y-1 transition-transform duration-300 h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <CardContent className="p-5 xl:p-6 relative z-10 flex items-center gap-4">
+              <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-inner">
+                <Users className="w-6 h-6 xl:w-7 xl:h-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-slate-500 font-medium mb-1 truncate">Total Residents</p>
+                <h3 className="text-2xl xl:text-3xl font-bold text-slate-800 tracking-tight truncate">{totalResidents}</h3>
+                <p className="text-[11px] xl:text-xs text-blue-600 font-semibold mt-1 truncate">Total Profiles</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center shrink-0">
-              <Building2 className="w-7 h-7" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">Total Flats</p>
-              <h3 className="text-2xl font-bold text-slate-800">{totalFlats}</h3>
-              <p className="text-xs text-blue-500 font-medium mt-1">
-                {vacantFlats} Vacant
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-emerald-900/5 bg-white overflow-hidden relative group hover:-translate-y-1 transition-transform duration-300 h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <CardContent className="p-5 xl:p-6 relative z-10 flex items-center gap-4">
+              <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center shrink-0 shadow-inner">
+                <Building2 className="w-6 h-6 xl:w-7 xl:h-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-slate-500 font-medium mb-1 truncate">Total Flats</p>
+                <h3 className="text-2xl xl:text-3xl font-bold text-slate-800 tracking-tight truncate">{totalFlats}</h3>
+                <p className="text-[11px] xl:text-xs text-emerald-600 font-semibold mt-1 truncate">{vacantFlats} Vacant</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-              <IndianRupee className="w-7 h-7" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">Total Collection (This Month)</p>
-              <h3 className="text-2xl font-bold text-slate-800">₹ {(totalCollections).toLocaleString()}</h3>
-              <p className={`text-xs flex items-center font-medium mt-1 ${collectionGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {collectionGrowth >= 0 ? <ArrowUp className="w-3 h-3 mr-1" /> : <ArrowDown className="w-3 h-3 mr-1" />} 
-                {Math.abs(collectionGrowth)}% vs last month
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-orange-900/5 bg-white overflow-hidden relative group hover:-translate-y-1 transition-transform duration-300 h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <CardContent className="p-5 xl:p-6 relative z-10 flex items-center gap-4">
+              <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-gradient-to-br from-orange-400 to-rose-500 text-white flex items-center justify-center shrink-0 shadow-inner">
+                <IndianRupee className="w-6 h-6 xl:w-7 xl:h-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-slate-500 font-medium mb-1 truncate">Collections (Month)</p>
+                <h3 className="text-2xl xl:text-3xl font-bold text-slate-800 tracking-tight truncate">₹{(totalCollections).toLocaleString()}</h3>
+                <p className={`text-[11px] xl:text-xs flex items-center font-semibold mt-1 truncate ${collectionGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {collectionGrowth >= 0 ? <ArrowUp className="w-3 h-3 mr-0.5 shrink-0" /> : <ArrowDown className="w-3 h-3 mr-0.5 shrink-0" />}
+                  <span className="truncate">{Math.abs(collectionGrowth)}% vs last month</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium mb-1">Open Complaints</p>
-              <h3 className="text-2xl font-bold text-slate-800">{pendingComplaints}</h3>
-              <p className={`text-xs font-medium mt-1 ${highPriorityOpenComplaints > 0 ? 'text-red-500' : 'text-slate-500'}`}>
-                {highPriorityOpenComplaints} High Priority
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-rose-900/5 bg-white overflow-hidden relative group hover:-translate-y-1 transition-transform duration-300 h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-full blur-3xl -mr-10 -mt-10 opacity-50 group-hover:opacity-100 transition-opacity" />
+            <CardContent className="p-5 xl:p-6 relative z-10 flex items-center gap-4">
+              <div className="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl bg-gradient-to-br from-rose-400 to-red-500 text-white flex items-center justify-center shrink-0 shadow-inner">
+                <AlertTriangle className="w-6 h-6 xl:w-7 xl:h-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-slate-500 font-medium mb-1 truncate">Open Complaints</p>
+                <h3 className="text-2xl xl:text-3xl font-bold text-slate-800 tracking-tight truncate">{pendingComplaints}</h3>
+                <p className={`text-[11px] xl:text-xs font-semibold mt-1 truncate ${highPriorityOpenComplaints > 0 ? 'text-rose-500' : 'text-slate-500'}`}>
+                  {highPriorityOpenComplaints} High Priority
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Middle Row: Line Chart and Notifications */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 rounded-2xl border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-bold text-slate-800">Maintenance Collection Overview</CardTitle>
-            <div className="flex items-center gap-4 text-sm font-medium">
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Collected</div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Pending</div>
-              <select className="ml-4 border border-slate-200 rounded-md text-sm px-2 py-1 text-slate-600 outline-none">
-                <option>Last 6 Months</option>
-              </select>
-            </div>
-          </CardHeader>
-          <CardContent className="h-[300px] mt-4">
-            {collectionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={collectionData} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(value) => `₹${value/1000}K`} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value) => [`₹ ${value.toLocaleString()}`, '']}
-                  />
-                  <Line type="monotone" dataKey="collected" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="pending" stroke="#cbd5e1" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-               <div className="h-full flex items-center justify-center text-slate-400">No data available</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
-            <CardTitle className="text-lg font-bold text-slate-800">Recent Notifications</CardTitle>
-            <a href="#" className="text-sm text-blue-600 font-medium hover:underline">View All</a>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-slate-100 h-[300px] overflow-y-auto custom-scrollbar">
-              {recentNotifications.map((note) => (
-                <div key={note.id} className="p-4 flex gap-4 hover:bg-slate-50 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
-                    <Bell className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">{note.action.replace(/_/g, ' ')}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">{note.entityType} ID: {note.entityId}</p>
-                  </div>
-                  <div className="text-xs text-slate-400 whitespace-nowrap">{formatTimeAgo(note.createdAt)}</div>
-                </div>
-              ))}
-              {recentNotifications.length === 0 && (
-                <div className="p-8 text-center text-sm text-slate-400">No recent notifications.</div>
+        <motion.div variants={itemVariants} className="lg:col-span-2">
+          <Card className="rounded-3xl border-0 shadow-lg shadow-slate-200/50 bg-white h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6 px-8">
+              <CardTitle className="text-xl font-bold text-slate-800">Maintenance Collection</CardTitle>
+              <div className="flex items-center gap-4 text-sm font-medium">
+                <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></span> Collected</div>
+                <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-slate-200 shadow-sm"></span> Pending</div>
+                <select className="ml-4 bg-slate-50 border border-slate-200 rounded-xl text-sm px-3 py-1.5 text-slate-600 outline-none focus:ring-2 focus:ring-blue-100 transition-all">
+                  <option>Last 6 Months</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent className="h-[320px] px-2 pb-6">
+              {collectionData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={collectionData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#64748b', fontWeight: 500 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: '#64748b', fontWeight: 500 }} tickFormatter={(value) => `₹${value / 1000}K`} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                      formatter={(value) => [`₹ ${value.toLocaleString()}`, '']}
+                    />
+                    <Line type="monotone" dataKey="collected" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 8, strokeWidth: 0, fill: '#3b82f6' }} />
+                    <Line type="monotone" dataKey="pending" stroke="#cbd5e1" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 8, strokeWidth: 0, fill: '#94a3b8' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-400 font-medium">No data available</div>
               )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-slate-200/50 bg-white h-full flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between pb-4 pt-6 px-6 border-b border-slate-100">
+              <CardTitle className="text-xl font-bold text-slate-800">Activity</CardTitle>
+              <a href="#" className="text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors bg-blue-50 px-3 py-1 rounded-full">View All</a>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 overflow-hidden">
+              <div className="divide-y divide-slate-100 h-[320px] overflow-y-auto custom-scrollbar">
+                {recentNotifications.map((note, idx) => (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + idx * 0.1 }}
+                    key={note.id}
+                    className="p-4 flex gap-4 hover:bg-slate-50 transition-colors items-center cursor-pointer group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors flex items-center justify-center shrink-0">
+                      <Bell className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800">{note.action.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 truncate">{note.entityType} ID: {note.entityId}</p>
+                    </div>
+                    <div className="text-xs font-medium text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-1 rounded-md">{formatTimeAgo(note.createdAt)}</div>
+                  </motion.div>
+                ))}
+                {recentNotifications.length === 0 && (
+                  <div className="p-8 h-full flex flex-col items-center justify-center text-center text-slate-400">
+                    <Bell className="w-8 h-8 mb-2 opacity-20" />
+                    <p className="text-sm font-medium">All caught up!</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Bottom Row: Donut Charts and Events */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-slate-800">Complaint Status</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center h-[220px] relative">
-            {complaintStatusData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={complaintStatusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="value">
-                      {complaintStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Custom Legend to match design */}
-                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-3">
-                  {complaintStatusData.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-xs font-medium text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
-                      <span className="w-20">{item.name}</span>
-                      <span className="font-bold text-slate-800">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-               <div className="text-slate-400">No complaints found</div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-slate-800">Flats Occupancy</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center h-[220px] relative">
-             {occupancyData.length > 0 ? (
-               <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={occupancyData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={0} dataKey="value" stroke="none">
-                      {occupancyData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-2xl font-bold text-slate-800">{occupancyPercentage}%</span>
-                    <span className="text-xs text-slate-500 font-medium">Occupied</span>
-                </div>
-                {/* Custom Legend to match design */}
-                <div className="absolute right-8 top-1/2 -translate-y-1/2 flex flex-col gap-4">
-                  {occupancyData.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-xs font-medium text-slate-600">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
-                      <span className="w-16">{item.name}</span>
-                      <span className="font-bold text-slate-800">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-               </>
-             ) : (
-                <div className="text-slate-400">No flat data found</div>
-             )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-0 shadow-sm bg-white">
-           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
-            <CardTitle className="text-lg font-bold text-slate-800">Upcoming Events</CardTitle>
-            <a href="#" className="text-sm text-blue-600 font-medium hover:underline">View All</a>
-          </CardHeader>
-          <CardContent className="p-0">
-             <div className="divide-y divide-slate-100 h-[220px] overflow-y-auto custom-scrollbar">
-              {upcomingEvents.map((evt) => {
-                const { day, month, time } = formatEventDate(evt.eventDate);
-                return (
-                  <div key={evt.id} className="p-4 flex gap-4 hover:bg-slate-50 transition-colors items-center">
-                    <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-blue-600 font-bold shrink-0 leading-tight">
-                      <span className="text-lg">{day}</span>
-                      <span className="text-[10px] uppercase">{month}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{evt.title}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate">{evt.location || 'Society Premises'}</p>
-                    </div>
-                    <div className="text-xs text-slate-500 font-medium whitespace-nowrap">{time}</div>
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-slate-200/50 bg-white">
+            <CardHeader className="pt-6 px-6">
+              <CardTitle className="text-lg font-bold text-slate-800">Complaint Status</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-[280px] relative pb-6">
+              {complaintStatusData.length > 0 ? (
+                <>
+                  <div className="h-[180px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={complaintStatusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none" cornerRadius={4}>
+                          {complaintStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                );
-              })}
-              {upcomingEvents.length === 0 && (
-                <div className="p-8 text-center text-sm text-slate-400">No upcoming events scheduled.</div>
+                  <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-4 w-full">
+                    {complaintStatusData.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                        <span>{item.name} <span className="font-bold text-slate-800 ml-1">{item.value}</span></span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-slate-400 font-medium">No complaints found</div>
               )}
-             </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      {/* Quick Actions Row */}
-      <div>
-        <h3 className="text-sm font-bold text-slate-800 mb-4 px-1">Quick Actions</h3>
-        <div className="flex flex-wrap gap-4">
-          <Button variant="outline" className="h-12 rounded-xl bg-white border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 px-6">
-            <UserPlus className="w-4 h-4 text-blue-600" />
-            Add Resident
-          </Button>
-          <Button variant="outline" className="h-12 rounded-xl bg-white border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 px-6">
-            <Building2 className="w-4 h-4 text-green-600" />
-            Add Flat
-          </Button>
-          <Button variant="outline" className="h-12 rounded-xl bg-white border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 px-6">
-            <IndianRupee className="w-4 h-4 text-orange-500" />
-            Collect Maintenance
-          </Button>
-          <Button variant="outline" className="h-12 rounded-xl bg-white border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 px-6">
-            <Bell className="w-4 h-4 text-purple-600" />
-            Add Notice
-          </Button>
-          <Button variant="outline" className="h-12 rounded-xl bg-white border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 px-6">
-            <Users className="w-4 h-4 text-blue-600" />
-            Register Visitor
-          </Button>
-          <Button variant="outline" className="h-12 rounded-xl bg-white border-slate-200 text-slate-700 hover:bg-slate-50 gap-2 px-6">
-            <FilePlus className="w-4 h-4 text-emerald-600" />
-            Generate Report
-          </Button>
-        </div>
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-slate-200/50 bg-white">
+            <CardHeader className="pt-6 px-6">
+              <CardTitle className="text-lg font-bold text-slate-800">Flats Occupancy</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center h-[280px] relative pb-6">
+              {occupancyData.length > 0 ? (
+                <>
+                  <div className="h-[180px] w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={occupancyData} cx="50%" cy="50%" innerRadius={65} outerRadius={80} paddingAngle={0} dataKey="value" stroke="none" cornerRadius={4}>
+                          {occupancyData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-3xl font-bold text-slate-800 tracking-tight">{occupancyPercentage}%</span>
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mt-1">Occupied</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-center gap-6 mt-4 w-full">
+                    {occupancyData.map((item, idx) => (
+                      <div key={idx} className="flex flex-col items-center gap-1 text-sm font-medium">
+                        <div className="flex items-center gap-1.5 text-slate-500">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                          {item.name}
+                        </div>
+                        <span className="font-bold text-lg text-slate-800">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-slate-400 font-medium">No flat data found</div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="rounded-3xl border-0 shadow-lg shadow-slate-200/50 bg-white h-full flex flex-col">
+            <CardHeader className="flex flex-row items-center justify-between pb-4 pt-6 px-6 border-b border-slate-100">
+              <CardTitle className="text-lg font-bold text-slate-800">Upcoming Events</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 flex-1">
+              <div className="divide-y divide-slate-100 h-[280px] overflow-y-auto custom-scrollbar">
+                {upcomingEvents.map((evt, idx) => {
+                  const { day, month, time } = formatEventDate(evt.eventDate);
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + idx * 0.1 }}
+                      key={evt.id}
+                      className="p-4 flex gap-4 hover:bg-slate-50 transition-colors items-center cursor-pointer group"
+                    >
+                      <div className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 font-bold shrink-0 leading-tight group-hover:bg-indigo-600 group-hover:text-white transition-colors shadow-sm">
+                        <span className="text-xl">{day}</span>
+                        <span className="text-[10px] uppercase tracking-widest">{month}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">{evt.title}</p>
+                        <p className="text-xs text-slate-500 mt-1 truncate font-medium flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> {evt.location || 'Society Premises'}
+                        </p>
+                      </div>
+                      <div className="text-xs text-slate-400 font-bold whitespace-nowrap bg-slate-50 px-2 py-1 rounded-md">{time}</div>
+                    </motion.div>
+                  );
+                })}
+                {upcomingEvents.length === 0 && (
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400">
+                    <Calendar className="w-8 h-8 mb-2 opacity-20" />
+                    <p className="text-sm font-medium">No upcoming events.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }
