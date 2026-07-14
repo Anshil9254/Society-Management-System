@@ -1,7 +1,7 @@
 const express = require('express');
 const { requireAuth, requireRole } = require('../../shared/middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const container = require('../../container');
 const auditLogsController = container.get('auditLogsController');
@@ -9,7 +9,7 @@ const auditLogsController = container.get('auditLogsController');
 const router = express.Router();
 
 router.use(requireAuth);
-router.use(requireRole(Roles.ADMIN, Roles.COMMITTEE));
+router.use(requireRole(ROLES.ADMIN, ROLES.COMMITTEE));
 
 /**
  * @route GET /api/v1/audit-logs
