@@ -1,7 +1,7 @@
 const { ConflictError, NotFoundError, ForbiddenError } = require('../../shared/errors');
 const { BillResponseDTO } = require('./billing.dto');
 const paginate = require('../../shared/utils/paginate');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 class BillingService {
   constructor(billingRepository, eventBus) {
@@ -35,13 +35,18 @@ class BillingService {
   }
 
   async generateBulkBills(adminId, bulkDTO) {
-    // 1. Fetch all flats
-    const flats = await this.repository.getAllFlats();
+    // 1. Fetch flats (optionally filtered by blockId)
+    const filters = {};
+    if (bulkDTO.blockId) {
+      filters.blockId = bulkDTO.blockId;
+    }
+    const flats = await this.repository.getAllFlats(filters);
     
-    // 2. Prepare bill data based on flat type
+    // 2. Prepare bill data based on flat square feet rate
     const billsData = flats.map((flat) => {
-      // Determine amount based on flat type, fallback to 0 if not defined in rates
-      const amount = bulkDTO.rates[flat.type] || 0;
+      // Calculate amount based on flat's squareFeet and the ratePerSqFt
+      const sqft = flat.squareFeet || 1000; // fallback to 1000 sqft if not defined
+      const amount = sqft * bulkDTO.ratePerSqFt;
       
       return {
         flatId: flat.id,
@@ -51,7 +56,7 @@ class BillingService {
         dueDate: new Date(bulkDTO.dueDate),
         status: 'pending',
       };
-    }).filter(bill => bill.amount > 0); // Only generate if rate > 0
+    }).filter(bill => bill.amount > 0); // Only generate if amount > 0
 
     if (billsData.length === 0) {
       throw new Error('No bills generated. Check rate configuration and flat types.');
@@ -77,9 +82,9 @@ class BillingService {
     const filters = {};
 
     // Resident can only see their own flat's bills
-    if (user.role === Roles.RESIDENT) {
+    if (user.role === ROLES.RESIDENT) {
       if (!user.residentProfile || !user.residentProfile.flatId) {
-        throw new ForbiddenError('No flat associated with your profile');
+        return paginate([], 0, page, limit);
       }
       filters.flatId = user.residentProfile.flatId;
     } else if (queryParams.flatId) {
@@ -102,13 +107,54 @@ class BillingService {
       throw new NotFoundError('Bill not found');
     }
 
-    if (user.role === Roles.RESIDENT) {
+    if (user.role === ROLES.RESIDENT) {
       if (!user.residentProfile || bill.flatId !== user.residentProfile.flatId) {
         throw new ForbiddenError('You can only access bills for your own flat');
       }
     }
 
     return new BillResponseDTO(bill);
+  }
+
+  async payBill(user, billId, paymentMode = 'upi') {
+    const bill = await this.repository.findBillById(billId);
+    if (!bill) {
+      throw new NotFoundError('Bill not found');
+    }
+
+    if (user.role === ROLES.RESIDENT) {
+      if (!user.residentProfile || bill.flatId !== user.residentProfile.flatId) {
+        throw new ForbiddenError('You can only pay bills for your own flat');
+      }
+    }
+
+    if (bill.status === 'paid') {
+      throw new ConflictError('Bill is already paid');
+    }
+
+    // Create payment record
+    const payment = await this.repository.createPayment({
+      billId: bill.id,
+      userId: user.id,
+      amount: bill.amount,
+      paymentMode,
+      status: 'success',
+      transactionId: `TXN${Date.now()}`
+    });
+
+    // Update bill status
+    await this.repository.updateBillStatus(bill.id, 'paid');
+
+    this.eventBus.emit('bill.paid', payment);
+    return payment;
+  }
+
+  async deleteBill(billId) {
+    const bill = await this.repository.findBillById(billId);
+    if (!bill) {
+      throw new NotFoundError('Bill not found');
+    }
+    await this.repository.deleteBill(billId);
   }
 }
 

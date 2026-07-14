@@ -2,7 +2,7 @@ const express = require('express');
 const { generateBillSchema, generateBulkBillSchema } = require('./billing.validator');
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
-const { Roles } = require('../../shared/constants');
+const { ROLES } = require('../../shared/constants');
 
 const container = require('../../container');
 const billingController = container.get('billingController');
@@ -29,8 +29,18 @@ router.get(
   asyncHandler(billingController.getBillById)
 );
 
+/**
+ * @route POST /api/v1/billing/:id/pay
+ * @desc Pay a specific bill
+ */
+router.post(
+  '/:id/pay',
+  auditLog('BILL_PAYMENT', 'MaintenanceBill', (req) => req.params.id),
+  asyncHandler(billingController.payBill)
+);
+
 // ─── Admin Only Routes ──────────────────────────────────────
-router.use(requireRole(Roles.ADMIN));
+router.use(requireRole(ROLES.ADMIN));
 
 /**
  * @route POST /api/v1/billing/single
@@ -52,6 +62,16 @@ router.post(
   validate(generateBulkBillSchema),
   auditLog('GENERATE_BULK_BILLS', 'MaintenanceBill', () => null),
   asyncHandler(billingController.generateBulkBills)
+);
+
+/**
+ * @route DELETE /api/v1/billing/:id
+ * @desc Delete a specific bill (Admin only)
+ */
+router.delete(
+  '/:id',
+  auditLog('DELETE_BILL', 'MaintenanceBill', (req) => req.params.id),
+  asyncHandler(billingController.deleteBill)
 );
 
 module.exports = router;

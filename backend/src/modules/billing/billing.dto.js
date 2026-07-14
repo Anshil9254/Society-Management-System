@@ -13,7 +13,9 @@ class BillResponseDTO {
         id: bill.flat.id,
         flatNumber: bill.flat.flatNumber,
         type: bill.flat.type,
+        squareFeet: bill.flat.squareFeet,
         blockName: bill.flat.block?.name,
+        leaderName: bill.flat.residents?.[0]?.fullName || null
       };
     }
   }
@@ -34,7 +36,8 @@ class GenerateBulkBillDTO {
     this.billingMonth = data.billingMonth;
     this.billingYear = data.billingYear;
     this.dueDate = data.dueDate;
-    this.rates = data.rates; // e.g., { '2BHK': 2000, '3BHK': 3000 }
+    this.ratePerSqFt = Number(data.ratePerSqFt);
+    this.blockId = data.blockId || null;
   }
 }
 

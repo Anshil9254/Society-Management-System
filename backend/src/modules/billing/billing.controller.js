@@ -27,6 +27,17 @@ class BillingController {
     const result = await this.service.getBillById(req.user, req.params.id);
     return apiResponse(res, 200, 'Bill fetched successfully', result);
   };
+
+  payBill = async (req, res) => {
+    const paymentMode = req.body.paymentMode || 'upi';
+    const result = await this.service.payBill(req.user, req.params.id, paymentMode);
+    return apiResponse(res, 200, 'Payment successful', result);
+  };
+
+  deleteBill = async (req, res) => {
+    await this.service.deleteBill(req.params.id);
+    return apiResponse(res, 200, 'Bill deleted successfully');
+  };
 }
 
 module.exports = BillingController;
