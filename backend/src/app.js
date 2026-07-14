@@ -4,7 +4,7 @@ const helmet = require('helmet');
 const appConfig = require('./shared/config/app.config');
 const errorHandler = require('./shared/middleware/errorHandler.middleware');
 const { API } = require('./shared/constants');
-
+const container = require('./container');
 const app = express();
 
 // ─── Security & Utility Middleware ─────────────────────────
@@ -34,6 +34,7 @@ app.use(`${API.PREFIX}/service-requests`, require('./modules/serviceRequests/ser
 app.use(`${API.PREFIX}/dashboard`, require('./modules/dashboard/dashboard.routes'));
 app.use(`${API.PREFIX}/notifications`, require('./modules/notifications/notifications.routes'));
 app.use(`${API.PREFIX}/audit-logs`, require('./modules/auditLogs/auditLogs.routes'));
+app.use(`${API.PREFIX}/blocks`, require('./modules/blocks/blocks.routes'));
 // etc.
 
 // ─── Health Check ──────────────────────────────────────────

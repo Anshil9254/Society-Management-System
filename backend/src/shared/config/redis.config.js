@@ -13,7 +13,7 @@ let redisClient = null;
 
 if (env.REDIS_URL) {
   redisClient = new Redis(env.REDIS_URL, {
-    maxRetriesPerRequest: 3,
+    maxRetriesPerRequest: null,
     retryStrategy(times) {
       // Exponential backoff: 200ms, 400ms, 800ms, then stop
       if (times > 3) return null;

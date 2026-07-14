@@ -1,5 +1,5 @@
 const prisma = require('./shared/config/database.config');
-const { EventBus } = require('./shared/events');
+const { eventBus } = require('./shared/events');
 const redisClient = require('./shared/config/redis.config');
 
 const AuthRepository = require('./modules/auth/auth.repository');
@@ -41,9 +41,13 @@ const AuditLogsRepository = require('./modules/auditLogs/auditLogs.repository');
 const AuditLogsService = require('./modules/auditLogs/auditLogs.service');
 const AuditLogsController = require('./modules/auditLogs/auditLogs.controller');
 
+const BlocksRepository = require('./modules/blocks/blocks.repository');
+const BlocksService = require('./modules/blocks/blocks.service');
+const BlocksController = require('./modules/blocks/blocks.controller');
+
 const CacheService = require('./shared/services/cache.service');
 const QueueService = require('./shared/services/queue.service');
-const env = require('./shared/config/env');
+const env = require('./shared/config/env.config');
 
 class Container {
   constructor() {
@@ -52,7 +56,7 @@ class Container {
     // Core
     this.services.set('prisma', prisma);
     this.services.set('redisClient', redisClient);
-    this.services.set('eventBus', EventBus.getInstance());
+    this.services.set('eventBus', eventBus);
     this.services.set('cacheService', new CacheService(this.get('redisClient')));
     this.services.set('queueService', new QueueService(this.get('redisClient')));
 
@@ -163,6 +167,16 @@ class Container {
 
     const auditLogsController = new AuditLogsController(this.get('auditLogsService'));
     this.services.set('auditLogsController', auditLogsController);
+
+    // Blocks Module
+    const blocksRepository = new BlocksRepository(this.get('prisma'));
+    this.services.set('blocksRepository', blocksRepository);
+
+    const blocksService = new BlocksService(this.get('blocksRepository'));
+    this.services.set('blocksService', blocksService);
+
+    const blocksController = new BlocksController(this.get('blocksService'));
+    this.services.set('blocksController', blocksController);
 
     // Other modules will be added here
   }
