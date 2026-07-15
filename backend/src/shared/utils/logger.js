@@ -37,35 +37,39 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-const logger = winston.createLogger({
-  levels: customLevels.levels,
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format,
-  transports: [
-    // Write all logs to combined.log
+const transports = [];
+
+if (process.env.NODE_ENV !== 'production') {
+  transports.push(
     new winston.transports.File({ 
       filename: path.join(__dirname, '../../../../backend/logs/combined.log') 
     }),
-    // Write only errors to error.log
     new winston.transports.File({ 
       filename: path.join(__dirname, '../../../../backend/logs/error.log'), 
       level: 'error' 
     }),
-    // Write audit logs separately for compliance
     new winston.transports.File({ 
       filename: path.join(__dirname, '../../../../backend/logs/audit.log'), 
       level: 'audit' 
     }),
-  ],
-});
-
-// Print to console in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
     new winston.transports.Console({
       format: consoleFormat,
     })
   );
+} else {
+  // In production (Vercel), log everything to standard output
+  transports.push(
+    new winston.transports.Console({
+      format: format, // Use the JSON format defined above
+    })
+  );
 }
+
+const logger = winston.createLogger({
+  levels: customLevels.levels,
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format,
+  transports,
+});
 
 module.exports = logger;
