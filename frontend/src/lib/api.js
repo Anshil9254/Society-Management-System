@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAccessToken, clearAccessToken } from '../contexts/AuthContext';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
   withCredentials: true, // Sends httpOnly refresh token cookie automatically
   headers: {
     'Content-Type': 'application/json'
