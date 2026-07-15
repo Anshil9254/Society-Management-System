@@ -5,6 +5,7 @@ class ServiceRequestResponseDTO {
     this.preferredDate = sr.preferredDate;
     this.status = sr.status;
     this.notes = sr.notes;
+    this.imageUrl = sr.imageUrl;
     this.createdAt = sr.createdAt;
 
     if (sr.user) {
@@ -25,10 +26,11 @@ class ServiceRequestResponseDTO {
 }
 
 class CreateServiceRequestDTO {
-  constructor(data) {
+  constructor(data, imageUrl = null) {
     this.serviceType = data.serviceType;
     this.preferredDate = data.preferredDate;
     this.notes = data.notes;
+    this.imageUrl = imageUrl;
   }
 }
 

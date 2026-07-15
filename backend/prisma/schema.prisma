@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================================================
@@ -202,6 +203,7 @@ model ServiceRequest {
   preferredDate  DateTime @map("preferred_date")
   status         String   @default("pending") // pending, approved, rejected, completed
   notes          String?
+  imageUrl       String?  @map("image_url")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 

@@ -10,6 +10,7 @@ class ServiceRequestsRepository {
         serviceType: data.serviceType,
         preferredDate: new Date(data.preferredDate),
         notes: data.notes,
+        imageUrl: data.imageUrl,
       },
       include: {
         user: {

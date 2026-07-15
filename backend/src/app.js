@@ -14,7 +14,13 @@ const app = express();
 
 // ─── Security & Utility Middleware ─────────────────────────
 // Set security HTTP headers
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow images to load from frontend
+}));
+
+// Serve uploaded images as static files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 // Enable CORS based on config
 app.use(cors({

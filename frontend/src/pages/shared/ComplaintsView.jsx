@@ -9,8 +9,34 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import ComplaintForm from './ComplaintForm';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquareWarning, Plus, CheckCircle2, Clock, AlertCircle, Inbox, Edit } from 'lucide-react';
+import { MessageSquareWarning, Plus, CheckCircle2, Clock, AlertCircle, Inbox, Edit, Image as ImageIcon, X, ZoomIn } from 'lucide-react';
 import { ListSkeleton } from '@/components/ui/LoadingSkeletons';
+
+const API_BASE = 'http://localhost:5000';
+
+function ImageModal({ src, alt, onClose }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute -top-4 -right-4 z-10 w-10 h-10 rounded-full bg-white text-slate-700 hover:text-rose-600 shadow-xl flex items-center justify-center transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <img
+          src={src}
+          alt={alt}
+          className="w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+        />
+        {alt && <p className="text-white/70 text-sm text-center mt-3 font-medium">{alt}</p>}
+      </div>
+    </div>
+  );
+}
 
 export default function ComplaintsView() {
   const { user } = useAuth();
@@ -25,13 +51,16 @@ export default function ComplaintsView() {
   const [comment, setComment] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Image lightbox state
+  const [lightboxImg, setLightboxImg] = useState(null);
+
   const fetchComplaints = async () => {
     try {
       setLoading(true);
       const res = await api.get('/complaints');
       setComplaints(res.data?.data || []);
     } catch (err) {
-      console.error("Failed to fetch complaints:", err);
+      console.error('Failed to fetch complaints:', err);
     } finally {
       setLoading(false);
     }
@@ -44,19 +73,19 @@ export default function ComplaintsView() {
   const handleStatusUpdate = async (e) => {
     e.preventDefault();
     if (!selectedComplaint) return;
-    
+
     try {
       setIsUpdating(true);
       await api.patch(`/complaints/${selectedComplaint.id}/status`, {
         status: newStatus,
-        comment: comment
+        comment: comment,
       });
       setStatusUpdateOpen(false);
       setComment('');
       setNewStatus('');
       fetchComplaints();
     } catch (err) {
-      console.error("Failed to update status:", err);
+      console.error('Failed to update status:', err);
       alert(err.response?.data?.message || 'Error updating status');
     } finally {
       setIsUpdating(false);
@@ -65,15 +94,15 @@ export default function ComplaintsView() {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'open': 
+      case 'open':
         return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-none font-bold shadow-sm px-2.5 py-1">Open</Badge>;
-      case 'in_progress': 
+      case 'in_progress':
         return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-none font-bold shadow-sm px-2.5 py-1">In Progress</Badge>;
-      case 'resolved': 
+      case 'resolved':
         return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none font-bold shadow-sm px-2.5 py-1">Resolved</Badge>;
-      case 'closed': 
+      case 'closed':
         return <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-200 border-none font-bold shadow-sm px-2.5 py-1">Closed</Badge>;
-      default: 
+      default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -87,10 +116,25 @@ export default function ComplaintsView() {
     }
   };
 
+  const getImageSrc = (imageUrl) => {
+    if (!imageUrl) return null;
+    if (imageUrl.startsWith('http')) return imageUrl;
+    return `${API_BASE}${imageUrl}`;
+  };
+
   const isAdminOrCommittee = user?.role === 'admin' || user?.role === 'committee_member';
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Lightbox */}
+      {lightboxImg && (
+        <ImageModal
+          src={lightboxImg.src}
+          alt={lightboxImg.alt}
+          onClose={() => setLightboxImg(null)}
+        />
+      )}
+
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 shadow-sm border border-rose-100/50">
@@ -115,7 +159,7 @@ export default function ComplaintsView() {
                 </div>
                 <DialogTitle className="text-xl font-bold text-slate-800">File a New Complaint</DialogTitle>
               </DialogHeader>
-              <div className="p-6 pt-2">
+              <div className="p-6 pt-2 max-h-[80vh] overflow-y-auto">
                 <ComplaintForm onSuccess={() => {
                   setIsFormOpen(false);
                   fetchComplaints();
@@ -137,6 +181,7 @@ export default function ComplaintsView() {
                   <thead className="bg-slate-50/80 border-b border-slate-100">
                     <tr>
                       <th className="p-4 pl-6 font-semibold text-slate-600">Complaint Details</th>
+                      <th className="p-4 font-semibold text-slate-600">Photo</th>
                       <th className="p-4 font-semibold text-slate-600">Category</th>
                       <th className="p-4 font-semibold text-slate-600">Priority</th>
                       <th className="p-4 font-semibold text-slate-600">Status</th>
@@ -146,56 +191,90 @@ export default function ComplaintsView() {
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     <AnimatePresence>
-                      {complaints.map((complaint, index) => (
-                        <motion.tr 
-                          key={complaint.id} 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="hover:bg-slate-50/80 transition-colors group"
-                        >
-                          <td className="p-4 pl-6">
-                            <p className="font-bold text-slate-800 text-sm group-hover:text-rose-600 transition-colors">{complaint.title}</p>
-                            <p className="text-xs text-slate-500 font-medium mt-1 line-clamp-1 max-w-[250px]">{complaint.description}</p>
-                          </td>
-                          <td className="p-4">
-                            <Badge variant="outline" className="capitalize text-slate-600 font-semibold bg-white">
-                              {complaint.category.replace('_', ' ')}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-1.5 capitalize text-sm font-semibold text-slate-700">
-                              {getPriorityIcon(complaint.priority)}
-                              {complaint.priority}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            {getStatusBadge(complaint.status)}
-                          </td>
-                          <td className="p-4 text-sm font-medium text-slate-600">
-                            {new Date(complaint.createdAt).toLocaleDateString(undefined, {
-                              year: 'numeric', month: 'short', day: 'numeric'
-                            })}
-                          </td>
-                          {isAdminOrCommittee && (
-                            <td className="p-4 pr-6 text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 font-semibold rounded-lg"
-                                onClick={() => {
-                                  setSelectedComplaint(complaint);
-                                  setNewStatus(complaint.status);
-                                  setComment('');
-                                  setStatusUpdateOpen(true);
-                                }}
-                              >
-                                <Edit className="w-4 h-4 mr-2" /> Update
-                              </Button>
+                      {complaints.map((complaint, index) => {
+                        const imgSrc = getImageSrc(complaint.imageUrl);
+                        return (
+                          <motion.tr
+                            key={complaint.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="hover:bg-slate-50/80 transition-colors group"
+                          >
+                            <td className="p-4 pl-6">
+                              <p className="font-bold text-slate-800 text-sm group-hover:text-rose-600 transition-colors">{complaint.title}</p>
+                              <p className="text-xs text-slate-500 font-medium mt-1 line-clamp-1 max-w-[220px]">{complaint.description}</p>
+                              {isAdminOrCommittee && complaint.reportedBy && (
+                                <p className="text-xs text-slate-400 mt-1 font-medium">
+                                  By: {complaint.reportedBy.fullName}
+                                  {complaint.reportedBy.flat ? ` · Flat ${complaint.reportedBy.flat}` : ''}
+                                </p>
+                              )}
                             </td>
-                          )}
-                        </motion.tr>
-                      ))}
+
+                            {/* Image Thumbnail */}
+                            <td className="p-4">
+                              {imgSrc ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setLightboxImg({ src: imgSrc, alt: complaint.title })}
+                                  className="relative w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-md hover:scale-105 transition-all group/img"
+                                >
+                                  <img
+                                    src={imgSrc}
+                                    alt={complaint.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/30 transition-all flex items-center justify-center">
+                                    <ZoomIn className="w-4 h-4 text-white opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                                  </div>
+                                </button>
+                              ) : (
+                                <div className="w-14 h-14 rounded-xl border border-dashed border-slate-200 bg-slate-50 flex items-center justify-center">
+                                  <ImageIcon className="w-4 h-4 text-slate-300" />
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="p-4">
+                              <Badge variant="outline" className="capitalize text-slate-600 font-semibold bg-white">
+                                {complaint.category.replace('_', ' ')}
+                              </Badge>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-1.5 capitalize text-sm font-semibold text-slate-700">
+                                {getPriorityIcon(complaint.priority)}
+                                {complaint.priority}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              {getStatusBadge(complaint.status)}
+                            </td>
+                            <td className="p-4 text-sm font-medium text-slate-600">
+                              {new Date(complaint.createdAt).toLocaleDateString(undefined, {
+                                year: 'numeric', month: 'short', day: 'numeric',
+                              })}
+                            </td>
+                            {isAdminOrCommittee && (
+                              <td className="p-4 pr-6 text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 font-semibold rounded-lg"
+                                  onClick={() => {
+                                    setSelectedComplaint(complaint);
+                                    setNewStatus(complaint.status);
+                                    setComment('');
+                                    setStatusUpdateOpen(true);
+                                  }}
+                                >
+                                  <Edit className="w-4 h-4 mr-2" /> Update
+                                </Button>
+                              </td>
+                            )}
+                          </motion.tr>
+                        );
+                      })}
                     </AnimatePresence>
                   </tbody>
                 </table>
@@ -205,9 +284,9 @@ export default function ComplaintsView() {
                 <Inbox className="w-16 h-16 text-slate-200 mb-4" />
                 <h3 className="text-lg font-bold text-slate-700">No complaints found</h3>
                 <p className="text-sm text-slate-500 mt-1 max-w-sm">
-                  {user?.role === 'resident' 
+                  {user?.role === 'resident'
                     ? "You haven't filed any complaints yet."
-                    : "There are no complaints registered in the system."}
+                    : 'There are no complaints registered in the system.'}
                 </p>
               </div>
             )}
@@ -229,8 +308,32 @@ export default function ComplaintsView() {
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Complaint Title</Label>
                 <div className="font-bold text-slate-800 text-base mt-1">{selectedComplaint.title}</div>
+
+                {/* Show attached image in update dialog too */}
+                {selectedComplaint.imageUrl && (
+                  <button
+                    type="button"
+                    className="mt-3 relative w-full h-32 rounded-xl overflow-hidden border border-slate-200 hover:opacity-90 transition-opacity group/img"
+                    onClick={() => setLightboxImg({
+                      src: getImageSrc(selectedComplaint.imageUrl),
+                      alt: selectedComplaint.title,
+                    })}
+                  >
+                    <img
+                      src={getImageSrc(selectedComplaint.imageUrl)}
+                      alt={selectedComplaint.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/30 transition-all flex items-center justify-center">
+                      <ZoomIn className="w-5 h-5 text-white opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 py-1.5 px-3 bg-gradient-to-t from-black/50 to-transparent">
+                      <p className="text-white text-xs font-semibold">Click to view full image</p>
+                    </div>
+                  </button>
+                )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label className="text-sm font-bold text-slate-700">New Status</Label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
@@ -248,7 +351,7 @@ export default function ComplaintsView() {
 
               <div className="space-y-2">
                 <Label className="text-sm font-bold text-slate-700">Comment / Resolution Note (Required)</Label>
-                <textarea 
+                <textarea
                   className="flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm ring-offset-background placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
@@ -258,8 +361,20 @@ export default function ComplaintsView() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <Button type="button" variant="ghost" className="rounded-xl hover:bg-slate-100" onClick={() => setStatusUpdateOpen(false)} disabled={isUpdating}>Cancel</Button>
-                <Button type="submit" className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6" disabled={isUpdating}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-xl hover:bg-slate-100"
+                  onClick={() => setStatusUpdateOpen(false)}
+                  disabled={isUpdating}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-6"
+                  disabled={isUpdating}
+                >
                   {isUpdating ? 'Updating...' : 'Update Status'}
                 </Button>
               </div>

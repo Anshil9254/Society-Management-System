@@ -1,6 +1,8 @@
 const express = require('express');
 const { createServiceRequestSchema, updateServiceRequestStatusSchema } = require('./serviceRequests.validator');
 const { requireAuth, requireRole, auditLog, validate } = require('../../shared/middleware');
+const upload = require('../../shared/middleware/upload.middleware');
+const { validateImageBytes } = require('../../shared/middleware/upload.middleware');
 const asyncHandler = require('../../shared/utils/asyncHandler');
 const { ROLES } = require('../../shared/constants');
 
@@ -13,10 +15,12 @@ router.use(requireAuth);
 
 /**
  * @route POST /api/v1/service-requests
- * @desc Raise a new service request (Plumber, Electrician, etc.)
+ * @desc Raise a new service request (Plumber, Electrician, etc.) — with optional image
  */
 router.post(
   '/',
+  upload.single('image'),       // Step 1: Save file to disk, check declared MIME
+  validateImageBytes,           // Step 2: Verify actual binary content (magic bytes)
   validate(createServiceRequestSchema),
   asyncHandler(serviceRequestsController.createServiceRequest)
 );

@@ -7,7 +7,10 @@ class ServiceRequestsController {
   }
 
   createServiceRequest = async (req, res) => {
-    const dto = new CreateServiceRequestDTO(req.validatedBody);
+    // If an image was uploaded, construct its URL/path
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const dto = new CreateServiceRequestDTO(req.validatedBody, imageUrl);
     const result = await this.service.createServiceRequest(req.user.id, dto);
     return apiResponse(res, 201, 'Service request raised successfully', result);
   };
