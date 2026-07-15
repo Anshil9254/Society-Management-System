@@ -88,7 +88,7 @@ The database is fully normalized to 3NF to prevent data duplication.
 3.  Start the Vite server: `npm run dev`
 
 ## ⚙️ Environment Variables
-
+Currenty also have in backend folder .env because of temp run i am provide the .env file 
 Copy the `backend/.env.example` file to `backend/.env` and update the values appropriately.
 
 | Variable | Description | Example Value |
@@ -109,4 +109,22 @@ Copy the `backend/.env.example` file to `backend/.env` and update the values app
 
 ## 🖼️ Screenshots
 
-*(Add screenshots of Admin Dashboard, Complaint Management, Billing screens, etc. here)*
+![Screenshot 1](images/Screenshot%202026-07-15%20090638.png)
+![Screenshot 2](images/Screenshot%202026-07-15%20090747.png)
+![Screenshot 3](images/Screenshot%202026-07-15%20090804.png)
+![Screenshot 4](images/Screenshot%202026-07-15%20090815.png)
+![Screenshot 5](images/Screenshot%202026-07-15%20090829.png)
+![Screenshot 6](images/Screenshot%202026-07-15%20090847.png)
+![Screenshot 7](images/Screenshot%202026-07-15%20090905.png)
+![Screenshot 8](images/Screenshot%202026-07-15%20090911.png)
+![Screenshot 9](images/Screenshot%202026-07-15%20090919.png)
+![Screenshot 10](images/Screenshot%202026-07-15%20090928.png)
+![Screenshot 11](images/Screenshot%202026-07-15%20090938.png)
+![Screenshot 12](images/Screenshot%202026-07-15%20091003.png)
+![Screenshot 13](images/Screenshot%202026-07-15%20091014.png)
+![Screenshot 14](images/Screenshot%202026-07-15%20091022.png)
+![Screenshot 15](images/Screenshot%202026-07-15%20091031.png)
+![Screenshot 16](images/Screenshot%202026-07-15%20091045.png)
+![Screenshot 17](images/Screenshot%202026-07-15%20091055.png)
+![Screenshot 18](images/Screenshot%202026-07-15%20091107.png)
+![Screenshot 19](images/Screenshot%202026-07-15%20091118.png)
