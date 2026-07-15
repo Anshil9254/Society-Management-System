@@ -2,8 +2,15 @@
 
 A production-ready society management platform designed to automate and streamline residential society operations. Built with modern web technologies, this system handles everything from resident onboarding and complaint tracking to automated maintenance billing and role-based access control (RBAC).
 
-## 🚀 Features
+## 🌐 Live Deployment
 
+* **Frontend App:** [https://society-management-system-iota.vercel.app](https://society-management-system-iota.vercel.app)
+* **Backend API:** [https://society-management-system-kcmh.vercel.app](https://society-management-system-kcmh.vercel.app)
+
+> [!WARNING]
+> This project is currently configured for a live deployed environment (Vercel). Running it locally may not work properly out-of-the-box due to production CORS settings, `.env.production` configurations, and Vercel-specific file paths. See `DEPLOYMENT.md` for more details.
+
+## 🚀 Features
 *   **Role-Based Access Control (RBAC):** Distinct roles and permissions for Admin, Committee Members, and Residents. Ensures users can only access endpoints and UI elements meant for their role.
 *   **User Authentication & Security:** Secure JWT-based authentication with short-lived access tokens and Redis-backed refresh tokens. Includes brute-force protection via rate limiting.
 *   **Resident & Flat Management:** Manage residents, their profiles, flat occupancies, and vehicle/emergency contact details seamlessly.
