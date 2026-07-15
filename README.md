@@ -87,6 +87,22 @@ The database is fully normalized to 3NF to prevent data duplication.
 2.  Install dependencies: `npm install`
 3.  Start the Vite server: `npm run dev`
 
+## 🔐 Demo Credentials
+
+Use the following credentials to test the different roles in the system:
+
+**Admin:**
+*   **Email:** `admin@society.com`
+*   **Password:** `password123`
+
+**Committee Member:**
+*   **Email:** `john@society.com`
+*   **Password:** `1234567890`
+
+**Resident:**
+*   **Email:** `alice@society.com`
+*   **Password:** `1234567890`
+
 ## ⚙️ Environment Variables
 Currenty also have in backend folder .env because of temp run i am provide the .env file 
 Copy the `backend/.env.example` file to `backend/.env` and update the values appropriately.
