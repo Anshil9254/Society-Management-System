@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 const announcementSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters").max(255),
+  title: z.string().min(5, "Title must be at least 5 characters").max(255),
   content: z.string().min(10, "Content must be at least 10 characters"),
   targetAudience: z.enum(['all', 'residents', 'committee']),
   isPinned: z.boolean().optional(),
