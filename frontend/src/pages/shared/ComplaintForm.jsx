@@ -64,6 +64,7 @@ export default function ComplaintForm({ onSuccess }) {
         <Label>Title</Label>
         <Input
           required
+          minLength={5}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Short summary of the issue"
@@ -74,6 +75,7 @@ export default function ComplaintForm({ onSuccess }) {
         <Label>Description</Label>
         <textarea
           required
+          minLength={10}
           className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           value={description}
           onChange={(e) => setDescription(e.target.value)}

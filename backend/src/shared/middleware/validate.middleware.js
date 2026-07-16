@@ -15,7 +15,8 @@ const validate = (schema) => (req, res, next) => {
         path: e.path.join('.'),
         message: e.message,
       }));
-      return next(new ValidationError('Validation failed', details));
+      const detailedMessage = `Validation failed: ${details.map(d => `${d.path} - ${d.message}`).join(', ')}`;
+      return next(new ValidationError(detailedMessage, details));
     }
     next(err);
   }

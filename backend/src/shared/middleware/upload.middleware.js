@@ -52,6 +52,8 @@ const upload = multer({
  * Cloudinary validates the file natively, so local byte inspection is removed.
  */
 const validateImageBytes = async (req, res, next) => {
+  console.log('REQ.BODY:', req.body);
+  console.log('REQ.FILE:', req.file);
   next();
 };
 
