@@ -16,8 +16,10 @@ A production-ready society management platform designed to automate and streamli
 *   **Resident & Flat Management:** Manage residents, their profiles, flat occupancies, and vehicle/emergency contact details seamlessly.
 *   **Automated Maintenance Billing:** Automated monthly bill generation using background jobs (BullMQ). Supports multi-month tracking and varying statuses (`pending`, `partially_paid`, `paid`, `overdue`).
 *   **Payment Tracking with Idempotency:** Record and track maintenance payments. Uses Redis-backed idempotency keys to safely process payments and prevent duplicate charges even on flaky network connections.
-*   **Complaint & Service Request Management:** Residents can raise complaints (with image uploads backed securely by **Cloudinary**) and request services (plumbing, electrical, etc.). Committee members can assign, track, and resolve them with a full, immutable status audit trail.
-*   **Email Notifications:** Automated email dispatch via **Nodemailer (SMTP)** for critical events like user onboarding and maintenance bill alerts.
+*   **Complaint & Service Request Management:** Residents can raise complaints and request services (plumbing, electrical, etc.), with optional photo attachments. **Cloudinary** is used for storing these image uploads instead of local disk storage. This is necessary because the application is deployed on Vercel Serverless Functions, which have a read-only file system (`EROFS`). Cloudinary ensures reliable cloud storage and fast delivery for these images.
+*   **Email Notifications:** The system uses **Nodemailer (SMTP)** to send automated email dispatch for critical events. Specifically, it is used for:
+    *   **User Onboarding:** Sending welcome emails containing temporary login passwords to newly registered residents.
+    *   **Maintenance Bill Alerts:** Notifying residents when new monthly maintenance bills are generated.
 *   **Announcements & Notices:** Society-wide or targeted announcements (all, residents, committee) with optional pinning and automatic expiration.
 *   **Comprehensive Audit Logs:** Immutable trail of sensitive actions (e.g., bill creation, status changes) for accountability and transparency. Captures the user, action, IP, and before/after JSON snapshots.
 *   **Real-time Notifications:** In-app notification feed to keep residents and committee members informed about bills, complaints, and announcements.
@@ -54,6 +56,8 @@ The system is designed around clear, automated workflows tailored to specific us
     *   *Reliability:* Payment idempotency keys.
 *   **BullMQ:** Redis-backed job queue for offloading heavy tasks (monthly bill generation, email notifications) from the main request/response cycle, ensuring the API remains highly responsive.
 *   **Zod / Joi:** Centralized schema validation ensuring clean, strictly typed data enters the controllers.
+*   **Cloudinary:** Cloud-based image management service. Used specifically to handle image uploads for Complaints and Service Requests. It bypasses Vercel's read-only file system restrictions by streaming uploads directly to the cloud.
+*   **Nodemailer:** Handles all outgoing SMTP email communications for the society (e.g., sending resident credentials upon registration and dispatching maintenance bill alerts).
 
 ### Frontend
 *   **React.js (Vite):** Blazing fast build tool and modern component-based UI library for a highly responsive single-page application (SPA).
@@ -110,6 +114,10 @@ Use the following credentials to test the different roles in the system:
 **Resident:**
 *   **Email:** `alice@society.com`
 *   **Password:** `1234567890`
+
+**Resident (Demo):**
+*   **Email:** `anshilbhuva@gmail.com`
+*   **Password:** `123456`
 
 ## ⚙️ Environment Variables
 Currenty also have in backend folder .env because of temp run i am provide the .env file 
