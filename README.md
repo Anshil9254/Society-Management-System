@@ -16,7 +16,8 @@ A production-ready society management platform designed to automate and streamli
 *   **Resident & Flat Management:** Manage residents, their profiles, flat occupancies, and vehicle/emergency contact details seamlessly.
 *   **Automated Maintenance Billing:** Automated monthly bill generation using background jobs (BullMQ). Supports multi-month tracking and varying statuses (`pending`, `partially_paid`, `paid`, `overdue`).
 *   **Payment Tracking with Idempotency:** Record and track maintenance payments. Uses Redis-backed idempotency keys to safely process payments and prevent duplicate charges even on flaky network connections.
-*   **Complaint & Service Request Management:** Residents can raise complaints (with image uploads) and request services (plumbing, electrical, etc.). Committee members can assign, track, and resolve them with a full, immutable status audit trail.
+*   **Complaint & Service Request Management:** Residents can raise complaints (with image uploads backed securely by **Cloudinary**) and request services (plumbing, electrical, etc.). Committee members can assign, track, and resolve them with a full, immutable status audit trail.
+*   **Email Notifications:** Automated email dispatch via **Nodemailer (SMTP)** for critical events like user onboarding and maintenance bill alerts.
 *   **Announcements & Notices:** Society-wide or targeted announcements (all, residents, committee) with optional pinning and automatic expiration.
 *   **Comprehensive Audit Logs:** Immutable trail of sensitive actions (e.g., bill creation, status changes) for accountability and transparency. Captures the user, action, IP, and before/after JSON snapshots.
 *   **Real-time Notifications:** In-app notification feed to keep residents and committee members informed about bills, complaints, and announcements.
@@ -124,6 +125,13 @@ Copy the `backend/.env.example` file to `backend/.env` and update the values app
 | `JWT_REFRESH_SECRET` | Secret for long-lived refresh tokens| `your_refresh_secret_...` |
 | `JWT_ACCESS_EXPIRY` | Access token lifetime | `15m` |
 | `CORS_ORIGIN` | Allowed frontend URL | `http://localhost:5173` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name | `your_cloud_name` |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | `your_api_key` |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | `your_api_secret` |
+| `SMTP_HOST` | Mail server host (e.g., smtp.gmail.com) | `smtp.gmail.com` |
+| `SMTP_USER` | Mail server username | `user@gmail.com` |
+| `SMTP_PASS` | Mail server password / App Password | `app_password` |
+| `SMTP_FROM` | Sender address | `noreply@domain.com` |
 
 ## 📚 API Documentation
 

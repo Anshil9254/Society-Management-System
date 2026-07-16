@@ -7,8 +7,8 @@ class ComplaintsController {
   }
 
   createComplaint = async (req, res) => {
-    // If an image was uploaded, construct its URL/path
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    // If an image was uploaded, Cloudinary provides the full URL in req.file.path
+    const imageUrl = req.file ? req.file.path : null;
     
     const dto = new CreateComplaintDTO(req.validatedBody, imageUrl);
     const result = await this.service.createComplaint(req.user.id, dto);

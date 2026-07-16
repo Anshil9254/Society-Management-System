@@ -27,6 +27,11 @@ const envSchema = z.object({
 
   // File uploads — defaults to 5MB
   UPLOAD_MAX_SIZE: z.coerce.number().default(5242880),
+
+  // Cloudinary credentials
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
+  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
+  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
 });
 
 let env;
